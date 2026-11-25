@@ -1,0 +1,32 @@
+name: Test and deploy
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: deploy-photoclub
+  cancel-in-progress: false
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm test
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    # Skips until the server is set up and both secrets exist (docs/SERVER.md, section 4).
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+    steps:
+      - name: Update the server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "photoclub@$DEPLOY_HOST" 'bash /srv/photoclub/scripts/deploy.sh'

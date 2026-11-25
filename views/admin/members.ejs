@@ -1,0 +1,53 @@
+<div class="wrap admin">
+  <%- include('_nav') %>
+  <div class="admin-main stack">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Members</h1>
+      <p class="muted"><%= members.length %> account<%= members.length === 1 ? '' : 's' %>. New members join with an <a href="/admin/invites">invite code</a>.</p>
+    </div>
+
+    <% if (resetCode) { %>
+      <div class="code-reveal" role="status">
+        <span class="label">Password reset code for <%= resetCode.name %></span>
+        <span class="code"><%= resetCode.code %></span>
+        <span class="muted small">Copy it now: it will not be shown again. Valid for 2 days, once.</span>
+        <button class="btn btn-ghost btn-sm" type="button" data-copy="Your password reset code for the <%= site.fullName %> website: <%= resetCode.code %>. Reset at <%= site.url %>/reset?code=<%= resetCode.code %>">Copy reset message</button>
+      </div>
+    <% } %>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Sign-in</th><th>Joined</th><th>Last sign-in</th><th>Role &amp; status</th><th></th></tr></thead>
+        <tbody>
+          <% members.forEach((m) => { %>
+            <tr>
+              <td><strong><%= m.display_name %></strong><br><span class="muted small"><%= m.username || m.email || '' %></span></td>
+              <td class="small"><%= [m.has_password ? 'Password' : null, m.has_google ? 'Google' : null].filter(Boolean).join(' · ') %></td>
+              <td class="small"><%= fmt.postedOn(m.created_at) %></td>
+              <td class="small"><%= m.last_login_at ? fmt.postedOn(m.last_login_at) : '—' %></td>
+              <td>
+                <% if (m.id === user.id) { %>
+                  <span class="state state-admin"><%= m.role %></span> <span class="muted small">(you)</span>
+                <% } else { %>
+                  <form class="inline-form" method="post" action="/admin/members/<%= m.id %>">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <select name="role" aria-label="Role"><option value="member" <%= m.role === 'member' ? 'selected' : '' %>>Member</option><option value="admin" <%= m.role === 'admin' ? 'selected' : '' %>>Admin</option></select>
+                    <select name="status" aria-label="Status"><option value="active" <%= m.status === 'active' ? 'selected' : '' %>>Active</option><option value="suspended" <%= m.status === 'suspended' ? 'selected' : '' %>>Suspended</option></select>
+                    <button class="btn btn-ghost btn-sm" type="submit">Save</button>
+                  </form>
+                <% } %>
+              </td>
+              <td>
+                <form method="post" action="/admin/members/<%= m.id %>/reset-code" data-confirm="Create a password reset code for <%= m.display_name %>?">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="btn btn-ghost btn-sm" type="submit">Reset code</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,23 @@
+<div class="auth">
+  <%- include('../partials/auth-art') %>
+  <section class="auth-panel">
+    <div class="auth-card">
+      <p class="eyebrow">Step 1 of 2</p>
+      <h1>Join the club</h1>
+      <p class="muted">Enter the invite code a club administrator gave you.</p>
+      <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+      <form class="form" method="post" action="/join">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="field">
+          <label for="code">Invite code</label>
+          <input class="input-code" id="code" name="code" type="text" placeholder="ICC-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" required value="<%= code %>">
+        </div>
+        <button class="btn btn-block" type="submit">Continue</button>
+      </form>
+      <div class="auth-foot">
+        <span>Already a member? <a href="/login">Sign in</a></span>
+        <span>No code yet? <a href="/about#membership">How to become a member</a></span>
+      </div>
+    </div>
+  </section>
+</div>

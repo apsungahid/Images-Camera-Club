@@ -1,0 +1,38 @@
+<div class="auth">
+  <%- include('../partials/auth-art') %>
+  <section class="auth-panel">
+    <div class="auth-card">
+      <p class="eyebrow">Step 2 of 2</p>
+      <h1>Create your account</h1>
+      <p class="muted">Your invite code is valid. Choose how you will sign in.</p>
+      <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+      <% if (googleEnabled) { %>
+        <%- include('../partials/google-button', { href: '/auth/google', label: 'Join with Google' }) %>
+        <div class="divider">or with a username</div>
+      <% } %>
+      <form class="form" method="post" action="/join/account">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="field">
+          <label for="display_name">Full name</label>
+          <input id="display_name" name="display_name" type="text" autocomplete="name" required value="<%= values.display_name || '' %>">
+          <span class="hint">Shown with your photographs.</span>
+        </div>
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required value="<%= values.username || '' %>">
+          <span class="hint">3–30 characters: letters, numbers, dot, dash or underscore.</span>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="new-password" minlength="10" required>
+          <span class="hint">At least 10 characters.</span>
+        </div>
+        <div class="field">
+          <label for="password_confirm">Confirm password</label>
+          <input id="password_confirm" name="password_confirm" type="password" autocomplete="new-password" minlength="10" required>
+        </div>
+        <button class="btn btn-block" type="submit">Create account</button>
+      </form>
+    </div>
+  </section>
+</div>

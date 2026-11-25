@@ -1,0 +1,8 @@
+<article class="section">
+  <div class="wrap narrow">
+    <p class="eyebrow"><a class="plain" href="/announcements">&larr; News</a></p>
+    <h1><%= item.title %></h1>
+    <div class="article-meta"><span><%= fmt.postedOn(item.published_at) %></span><% if (item.author) { %><span>by <%= item.author %></span><% } %><% if (item.visibility === 'members') { %><span class="tag tag-members">Members only</span><% } %></div>
+    <div class="article-body"><%- fmt.paragraphs(item.body) %></div>
+  </div>
+</article>

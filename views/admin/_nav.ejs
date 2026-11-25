@@ -1,0 +1,9 @@
+<% const adminLink = (href, label) => `<a href="${href}"${path.replace(/\/$/, '') === href ?' aria-current="page"' : ''}>${label}</a>`; %>
+<nav class="admin-nav" aria-label="Administration">
+  <span class="label">Administration</span>
+  <%- adminLink('/admin', 'Overview') %>
+  <%- adminLink('/admin/invites', 'Invite codes') %>
+  <%- adminLink('/admin/members', 'Members') %>
+  <%- adminLink('/admin/announcements', 'Announcements') %>
+  <%- adminLink('/admin/events', 'Activities') %>
+</nav>

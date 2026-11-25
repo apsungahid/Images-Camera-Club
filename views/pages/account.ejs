@@ -1,0 +1,63 @@
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow"><%= user.role === 'admin' ? 'Administrator' : 'Member' %></p>
+    <h1><%= user.display_name %></h1>
+    <p class="muted"><% if (user.username) { %>Signed in as <strong><%= user.username %></strong><% } else { %>Signed in with Google<% } %></p>
+  </div>
+</section>
+<section class="section flush-top">
+  <div class="wrap two-col">
+    <div class="panel">
+      <h2>Profile</h2>
+      <form class="form" method="post" action="/account/profile">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="field">
+          <label for="display_name">Full name</label>
+          <input id="display_name" name="display_name" type="text" required value="<%= user.display_name %>">
+        </div>
+        <div class="field">
+          <label for="bio">About you</label>
+          <textarea id="bio" name="bio" maxlength="1000" placeholder="What you shoot, your gear, where you like to photograph…"><%= user.bio || '' %></textarea>
+          <span class="hint">Shown on your portfolio page.</span>
+        </div>
+        <div><button class="btn" type="submit">Save profile</button></div>
+      </form>
+    </div>
+
+    <div class="stack">
+      <div class="panel">
+        <h2><%= user.has_password ? 'Change password' : 'Set a password' %></h2>
+        <form class="form" method="post" action="/account/password">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <% if (user.has_password) { %>
+            <div class="field"><label for="current">Current password</label><input id="current" name="current" type="password" autocomplete="current-password" required></div>
+          <% } %>
+          <div class="field"><label for="password">New password</label><input id="password" name="password" type="password" autocomplete="new-password" minlength="10" required></div>
+          <div class="field"><label for="password_confirm">Confirm new password</label><input id="password_confirm" name="password_confirm" type="password" autocomplete="new-password" minlength="10" required></div>
+          <div><button class="btn" type="submit"><%= user.has_password ? 'Change password' : 'Set password' %></button></div>
+        </form>
+      </div>
+
+      <% if (googleEnabled) { %>
+      <div class="panel">
+        <h2>Google sign-in</h2>
+        <% if (user.google_id) { %>
+          <p class="muted">Your Google account is linked. You can sign in with Google.</p>
+          <form method="post" action="/account/unlink-google">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn btn-ghost btn-sm" type="submit">Remove Google sign-in</button>
+          </form>
+        <% } else { %>
+          <p class="muted">Link a Google account to sign in without a password.</p>
+          <%- include('../partials/google-button', { href: '/auth/google/link', label: 'Link Google account' }) %>
+        <% } %>
+      </div>
+      <% } %>
+
+      <form method="post" action="/logout">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn-ghost" type="submit">Sign out</button>
+      </form>
+    </div>
+  </div>
+</section>

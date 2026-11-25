@@ -1,0 +1,22 @@
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Gallery</p>
+    <h1>Members' photographs</h1>
+    <p class="lede">Work by the members of the <%= site.fullName %>. Every photograph remains the property of its photographer.</p>
+  </div>
+</section>
+<section class="section flush-top">
+  <div class="wrap">
+    <% if (photos.length) { %>
+      <div class="masonry">
+        <% photos.forEach((p) => { %><%- include('../partials/photo', { p }) %><% }) %>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <svg class="frame-icon" viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="6" y="12" width="44" height="32"/><path d="M6 38l12-11 9 8 7-6 16 13"/><circle cx="38" cy="22" r="3.5"/></svg>
+        <h3>The gallery is being curated</h3>
+        <p>Our members' photographs will be published here soon. Please check back.</p>
+      </div>
+    <% } %>
+  </div>
+</section>

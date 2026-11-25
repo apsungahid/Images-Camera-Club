@@ -1,0 +1,41 @@
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="/">
+          <%- include('mark') %>
+          <span class="brand-text"><span class="brand-name">Images</span><span class="brand-sub">Camera Club of Cebu</span></span>
+        </a>
+        <p style="margin-top:20px;max-width:38ch"><%= site.tagline %></p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="/gallery">Gallery</a></li>
+          <li><a href="/events">Activities</a></li>
+          <li><a href="/announcements">News</a></li>
+          <li><a href="/about">About the club</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Members</h4>
+        <ul>
+          <% if (user) { %>
+            <li><a href="/account">Your account</a></li>
+            <li><form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="link-btn" type="submit">Sign out</button></form></li>
+          <% } else { %>
+            <li><a href="/login">Sign in</a></li>
+            <li><a href="/join">Join with an invite code</a></li>
+          <% } %>
+          <% if (site.social.facebook) { %><li><a href="<%= site.social.facebook %>" rel="noopener">Facebook</a></li><% } %>
+          <% if (site.social.instagram) { %><li><a href="<%= site.social.instagram %>" rel="noopener">Instagram</a></li><% } %>
+          <% if (site.email) { %><li><a href="mailto:<%= site.email %>"><%= site.email %></a></li><% } %>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; <%= new Date().getFullYear() %> <%= site.fullName %>. All photographs &copy; their photographers.</span>
+      <span><%= site.place %></span>
+    </div>
+  </div>
+</footer>

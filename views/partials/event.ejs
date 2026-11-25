@@ -1,0 +1,14 @@
+<li class="event">
+  <div class="event-date" aria-hidden="true"><span class="m"><%= fmt.eventMonth(ev.starts_at) %></span><span class="d"><%= fmt.eventDate(ev.starts_at) %></span></div>
+  <div>
+    <h3><%= ev.title %></h3>
+    <div class="meta">
+      <span><%= fmt.eventDay(ev.starts_at) %> · <%= fmt.eventTime(ev.starts_at) %><% if (ev.ends_at) { %> – <%= ev.ends_at.slice(0,10) === ev.starts_at.slice(0,10) ? fmt.eventTime(ev.ends_at) : fmt.eventDay(ev.ends_at) %><% } %></span>
+      <% if (ev.location) { %><span><%= ev.location %></span><% } %>
+    </div>
+    <% if (typeof showDesc !== 'undefined' && showDesc && ev.description) { %><div class="desc"><%- fmt.paragraphs(ev.description) %></div><% } %>
+  </div>
+  <div class="tag-col">
+    <% if (ev.visibility === 'members') { %><span class="tag tag-members">Members</span><% } else { %><span class="tag"><%= ev.kind %></span><% } %>
+  </div>
+</li>

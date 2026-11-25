@@ -1,0 +1,69 @@
+<div class="wrap admin">
+  <%- include('_nav') %>
+  <div class="admin-main stack">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Invite codes</h1>
+      <p class="muted">Each code works once. Send it to the new member privately; they use it at <strong>/join</strong>.</p>
+    </div>
+
+    <% if (newCode) { %>
+      <div class="code-reveal" role="status">
+        <span class="label">New <%= newCode.role %> invite<%= newCode.forName ? ` for ${newCode.forName}` : '' %></span>
+        <span class="code"><%= newCode.code %></span>
+        <span class="muted small">Copy it now: it will not be shown again. Expires <%= new Intl.DateTimeFormat('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'medium' }).format(new Date(newCode.expiresAt)) %>.</span>
+        <button class="btn btn-ghost btn-sm" type="button" data-copy="Your invite code for the <%= site.fullName %> website: <%= newCode.code %>. Join at <%= site.url %>/join?code=<%= newCode.code %>">Copy invite message</button>
+      </div>
+    <% } %>
+
+    <details class="panel" <%= newCode ? '' : 'open' %>>
+      <summary>Create an invite code</summary>
+      <form class="form" method="post" action="/admin/invites">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="field">
+          <label for="for_name">For (member's name)</label>
+          <input id="for_name" name="for_name" type="text" maxlength="80" placeholder="e.g. Maria Santos">
+          <span class="hint">Optional. Pre-fills their name and helps you keep track.</span>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="role">Role</label>
+            <select id="role" name="role"><option value="member">Member</option><option value="admin">Administrator</option></select>
+          </div>
+          <div class="field">
+            <label for="days">Valid for</label>
+            <select id="days" name="days"><option value="3">3 days</option><option value="7">7 days</option><option value="14" selected>14 days</option><option value="30">30 days</option></select>
+          </div>
+        </div>
+        <div><button class="btn" type="submit">Create code</button></div>
+      </form>
+    </details>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>For</th><th>Role</th><th>Status</th><th>Created</th><th>Expires</th><th>Used by</th><th></th></tr></thead>
+        <tbody>
+          <% if (!invites.length) { %><tr><td colspan="7" class="muted">No invite codes yet.</td></tr><% } %>
+          <% invites.forEach((c) => { %>
+            <tr>
+              <td><%= c.for_name || '—' %></td>
+              <td><span class="state <%= c.role === 'admin' ? 'state-admin' : '' %>"><%= c.role %></span></td>
+              <td><span class="state state-<%= c.state %>"><%= c.state %></span></td>
+              <td class="small"><%= fmt.postedOn(c.created_at) %><br><span class="muted"><%= c.created_by_name || '' %></span></td>
+              <td class="small"><%= fmt.postedOn(c.expires_at) %></td>
+              <td><%= c.used_by_name || '' %></td>
+              <td>
+                <% if (c.state === 'open') { %>
+                  <form method="post" action="/admin/invites/<%= c.id %>/revoke" data-confirm="Revoke this invite code? It will stop working.">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button class="btn btn-danger btn-sm" type="submit">Revoke</button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,24 @@
+<section class="page-head">
+  <div class="wrap narrow">
+    <p class="eyebrow">News</p>
+    <h1>Announcements</h1>
+    <% if (!user) { %><p class="lede">Some announcements are for members only. <a href="/login">Sign in</a> to see them.</p><% } %>
+  </div>
+</section>
+<section class="section flush-top">
+  <div class="wrap narrow">
+    <% if (announcements.length) { %>
+      <ul class="note-list">
+        <% announcements.forEach((a) => { %>
+          <li>
+            <div class="article-meta tight"><span><%= fmt.postedOn(a.published_at) %></span><% if (a.pinned) { %><span class="tag">Pinned</span><% } %><% if (a.visibility === 'members') { %><span class="tag tag-members">Members</span><% } %></div>
+            <h3><a href="/announcements/<%= a.id %>"><%= a.title %></a></h3>
+            <p class="muted flush"><%= a.body.length > 220 ? a.body.slice(0, 220).trim() + '…' : a.body %></p>
+          </li>
+        <% }) %>
+      </ul>
+    <% } else { %>
+      <div class="empty-state"><h3>No announcements yet</h3><p>Club news will be posted here.</p></div>
+    <% } %>
+  </div>
+</section>

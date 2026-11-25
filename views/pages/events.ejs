@@ -1,0 +1,20 @@
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Schedule</p>
+    <h1>Activities</h1>
+    <p class="lede">Photo walks, workshops, meetings and contests.<% if (!user) { %> <a href="/login">Sign in</a> to see the members-only schedule.<% } %></p>
+  </div>
+</section>
+<section class="section flush-top">
+  <div class="wrap">
+    <% if (upcoming.length) { %>
+      <ul class="event-list"><% upcoming.forEach((ev) => { %><%- include('../partials/event', { ev, showDesc: true }) %><% }) %></ul>
+    <% } else { %>
+      <div class="empty-state"><h3>Nothing scheduled yet</h3><p>The next activities will be posted here soon.</p></div>
+    <% } %>
+    <% if (past.length) { %>
+      <h2 class="past-head">Past activities</h2>
+      <ul class="event-list past"><% past.forEach((ev) => { %><%- include('../partials/event', { ev, showDesc: false }) %><% }) %></ul>
+    <% } %>
+  </div>
+</section>

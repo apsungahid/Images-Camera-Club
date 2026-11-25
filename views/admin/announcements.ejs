@@ -1,0 +1,55 @@
+<div class="wrap admin">
+  <%- include('_nav') %>
+  <div class="admin-main stack">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Announcements</h1>
+    </div>
+
+    <details class="panel" <%= items.length ? '' : 'open' %>>
+      <summary>Write an announcement</summary>
+      <form class="form" method="post" action="/admin/announcements">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="field"><label for="title">Title</label><input id="title" name="title" type="text" maxlength="160" required></div>
+        <div class="field">
+          <label for="body">Announcement</label>
+          <textarea id="body" name="body" rows="8" required></textarea>
+          <span class="hint">Leave a blank line between paragraphs.</span>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="visibility">Who can see it</label>
+            <select id="visibility" name="visibility"><option value="members">Members only</option><option value="public">Everyone (public)</option></select>
+          </div>
+          <div class="field">
+            <span class="label">Options</span>
+            <label class="check"><input type="checkbox" name="pinned" value="1"> Pin to the top</label>
+          </div>
+        </div>
+        <div><button class="btn" type="submit">Publish</button></div>
+      </form>
+    </details>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Title</th><th>Visible to</th><th>Published</th><th></th></tr></thead>
+        <tbody>
+          <% if (!items.length) { %><tr><td colspan="4" class="muted">No announcements yet.</td></tr><% } %>
+          <% items.forEach((a) => { %>
+            <tr>
+              <td><a href="/announcements/<%= a.id %>"><%= a.title %></a><% if (a.pinned) { %> <span class="state">Pinned</span><% } %></td>
+              <td><span class="state <%= a.visibility === 'members' ? 'state-admin' : 'state-open' %>"><%= a.visibility === 'members' ? 'Members' : 'Public' %></span></td>
+              <td class="small"><%= fmt.postedOn(a.published_at) %></td>
+              <td>
+                <form method="post" action="/admin/announcements/<%= a.id %>/delete" data-confirm="Delete this announcement? This cannot be undone.">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

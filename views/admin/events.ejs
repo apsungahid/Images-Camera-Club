@@ -1,0 +1,60 @@
+<div class="wrap admin">
+  <%- include('_nav') %>
+  <div class="admin-main stack">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Activities</h1>
+      <p class="muted">Times are Cebu time.</p>
+    </div>
+
+    <details class="panel" <%= items.length ? '' : 'open' %>>
+      <summary>Add an activity</summary>
+      <form class="form" method="post" action="/admin/events">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="field"><label for="title">Title</label><input id="title" name="title" type="text" maxlength="160" required placeholder="e.g. Sunrise photo walk: Fort San Pedro"></div>
+        <div class="row">
+          <div class="field">
+            <label for="kind">Type</label>
+            <select id="kind" name="kind">
+              <option value="photowalk">Photo walk</option><option value="workshop">Workshop</option><option value="meeting">Meeting</option>
+              <option value="contest">Contest</option><option value="exhibit">Exhibit</option><option value="activity">Other activity</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="visibility">Who can see it</label>
+            <select id="visibility" name="visibility"><option value="members">Members only</option><option value="public">Everyone (public)</option></select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="starts_at">Starts</label><input id="starts_at" name="starts_at" type="datetime-local" required></div>
+          <div class="field"><label for="ends_at">Ends</label><input id="ends_at" name="ends_at" type="datetime-local"><span class="hint">Optional.</span></div>
+        </div>
+        <div class="field"><label for="location">Location</label><input id="location" name="location" type="text" maxlength="200"></div>
+        <div class="field"><label for="description">Details</label><textarea id="description" name="description" rows="5" placeholder="What to bring, meeting point, fees…"></textarea></div>
+        <div><button class="btn" type="submit">Add to schedule</button></div>
+      </form>
+    </details>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>When</th><th>Activity</th><th>Visible to</th><th></th></tr></thead>
+        <tbody>
+          <% if (!items.length) { %><tr><td colspan="4" class="muted">No activities yet.</td></tr><% } %>
+          <% items.forEach((ev) => { %>
+            <tr>
+              <td class="small"><%= fmt.eventDay(ev.starts_at) %><br><span class="muted"><%= fmt.eventTime(ev.starts_at) %></span></td>
+              <td><strong><%= ev.title %></strong><br><span class="muted small"><%= ev.kind %><%= ev.location ? ` · ${ev.location}` : '' %></span></td>
+              <td><span class="state <%= ev.visibility === 'members' ? 'state-admin' : 'state-open' %>"><%= ev.visibility === 'members' ? 'Members' : 'Public' %></span></td>
+              <td>
+                <form method="post" action="/admin/events/<%= ev.id %>/delete" data-confirm="Delete this activity? This cannot be undone.">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

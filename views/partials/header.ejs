@@ -1,0 +1,30 @@
+<% const navLink = (href, label) => {
+  const current = href === '/' ? path === '/' : path === href || path.startsWith(href + '/');
+  return `<a href="${href}"${current ? ' aria-current="page"' : ''}>${label}</a>`;
+}; %>
+<a class="visually-hidden" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="<%= site.fullName %>, home">
+      <%- include('mark') %>
+      <span class="brand-text"><span class="brand-name">Images</span><span class="brand-sub">Camera Club of Cebu</span></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+    </button>
+    <nav class="nav" id="site-nav" aria-label="Main">
+      <%- navLink('/gallery', 'Gallery') %>
+      <%- navLink('/events', 'Activities') %>
+      <%- navLink('/announcements', 'News') %>
+      <%- navLink('/about', 'About') %>
+      <% if (isAdmin) { %><%- navLink('/admin', 'Admin') %><% } %>
+      <span class="nav-actions">
+        <% if (user) { %>
+          <a class="btn btn-ghost btn-sm" href="/account"><%= user.display_name.split(' ')[0] %></a>
+        <% } else { %>
+          <a class="btn btn-ghost btn-sm" href="/login">Member sign in</a>
+        <% } %>
+      </span>
+    </nav>
+  </div>
+</header>
