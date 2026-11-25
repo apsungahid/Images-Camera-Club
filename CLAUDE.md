@@ -30,15 +30,14 @@ See [docs/SERVER.md](docs/SERVER.md). Served from `/srv/photoclub`, port `3001`,
 (object storage), never in git.
 
 ## Rules for Claude
-- This repository is the **Images Camera Club website** (`OWNER/photo-club` — replace with the real
-  repository once created), served at `www.imagescameraclub.com` from `/srv/photoclub` on port
+- This repository is the **Images Camera Club website** (`apsungahid/Images-Camera-Club`), served at `www.imagescameraclub.com` from `/srv/photoclub` on port
   `3001`, service `photoclub`.
 - The same server also runs the **Dual Crest HRIS** (`/srv/hris`, port 3000, service `hris`,
   repository `apsungahid/Soju-Framework`). Never read, change, restart, deploy or push anything of
   the HRIS from this project.
 - **`/deploy`** in this project means: run the tests; if they pass, commit and push this
   repository's work branch to **this repository's** `main`. GitHub Actions then deploys the club
-  website only. Before pushing, check `git remote get-url origin` is this club repository; if it is
+  website only. Before pushing, check `git remote get-url origin` is `apsungahid/Images-Camera-Club`; if it is
   anything else, stop and say so.
 - Only `/deploy` pushes to `main`. Other pushes go to the work branch.
 - Never commit `.env`, databases, uploaded photos or other local data.

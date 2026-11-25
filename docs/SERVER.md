@@ -13,7 +13,7 @@ Placeholders used below. Replace them once they are decided:
 | Placeholder | Meaning |
 |---|---|
 | `www.imagescameraclub.com` | the club website's domain |
-| `OWNER/photo-club` | the club website's GitHub repository |
+| `apsungahid/Images-Camera-Club` | the club website's GitHub repository |
 | `3001` | the club website's port (see "What is taken") |
 
 ---
@@ -31,7 +31,7 @@ Placeholders used below. Replace them once they are decided:
 | Daily backup cron | `/etc/cron.d/hris-backup` (2:00 AM) | `/etc/cron.d/photoclub-backup` (e.g. 2:30 AM) |
 | Database | `/srv/hris/data/app.db` | its own file under `/srv/photoclub/` |
 | Domain | `hris.dualcrest.com` | `www.imagescameraclub.com` |
-| GitHub repository | `apsungahid/Soju-Framework` | `OWNER/photo-club` |
+| GitHub repository | `apsungahid/Soju-Framework` | `apsungahid/Images-Camera-Club` |
 | GitHub deploy trigger | push to `main` of the HRIS repo | push to `main` of the club repo |
 | SSH key GitHub Actions logs in with | `/home/hris/.ssh/github_actions` (may log in as `hris` only) | a new key for `photoclub` only |
 | Read-only GitHub deploy key on the server | `/home/hris/.ssh/id_ed25519` | a new key in `/home/photoclub/.ssh/` |
@@ -72,8 +72,8 @@ install -d -o photoclub -g photoclub -m 755 /srv/photoclub
 sudo -u photoclub ssh-keygen -t ed25519 -N '' -C "photoclub-server" -f /home/photoclub/.ssh/id_ed25519
 sudo -u photoclub bash -c 'ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts'
 cat /home/photoclub/.ssh/id_ed25519.pub
-#    -> GitHub: OWNER/photo-club > Settings > Deploy keys > Add (read-only)
-sudo -u photoclub git clone --branch main git@github.com:OWNER/photo-club.git /srv/photoclub
+#    -> GitHub: apsungahid/Images-Camera-Club > Settings > Deploy keys > Add (read-only)
+sudo -u photoclub git clone --branch main git@github.com:apsungahid/Images-Camera-Club.git /srv/photoclub
 
 # 3. its .env (PORT=3001, its own secrets and domain), readable only by photoclub
 sudo -u photoclub nano /srv/photoclub/.env
@@ -222,14 +222,14 @@ exit 1
 The same Claude account works on both projects. Claude keeps its notes per project folder, so
 the HRIS rules do not carry over: this section gives the club project its own.
 
-- This repository is the **Photography Club website** (`OWNER/photo-club`), served at
+- This repository is the **Photography Club website** (`apsungahid/Images-Camera-Club`), served at
   `www.imagescameraclub.com` from `/srv/photoclub` on port `3001`, service `photoclub`.
 - The same server also runs the **Dual Crest HRIS** (`/srv/hris`, port 3000, service `hris`,
   repository `apsungahid/Soju-Framework`). Never read, change, restart, deploy or push anything of
   the HRIS from this project.
 - **`/deploy`** in this project means: run the tests; if they pass, commit and push this
   repository's work branch to **this repository's** `main`. GitHub Actions then deploys the club
-  website only. Before pushing, check `git remote get-url origin` is `OWNER/photo-club`; if it is
+  website only. Before pushing, check `git remote get-url origin` is `apsungahid/Images-Camera-Club`; if it is
   anything else, stop and say so.
 - Only `/deploy` pushes to `main`. Other pushes go to the work branch.
 - Never commit `.env`, databases, uploaded photos or other local data.
@@ -242,10 +242,10 @@ shows up in every project.) A minimal version:
 ```markdown
 ---
 name: deploy
-description: Deploy the Photography Club website (www.imagescameraclub.com) by pushing the work branch to main of OWNER/photo-club. Only when the user types /deploy.
+description: Deploy the Photography Club website (www.imagescameraclub.com) by pushing the work branch to main of apsungahid/Images-Camera-Club. Only when the user types /deploy.
 ---
 
-1. `git remote get-url origin` must be OWNER/photo-club. If not, STOP: this is not the club project.
+1. `git remote get-url origin` must be apsungahid/Images-Camera-Club. If not, STOP: this is not the club project.
 2. Run the tests. If any fail, STOP and report; the live site stays as it is.
 3. Commit any changes (never .env, databases, uploads).
 4. `git fetch origin`; merge origin/main into the work branch if it is behind.
