@@ -2,7 +2,7 @@ const express = require('express');
 const passport = require('passport');
 const { z } = require('zod');
 const { hashPassword, verifyPassword, DUMMY_HASH } = require('../lib/passwords');
-const { findUsableCode, markCodeUsed } = require('../lib/codes');
+const { findUsableCode, markCodeUsed, accountFromInvite } = require('../lib/codes');
 const { rateLimit } = require('../lib/security');
 
 const usernameSchema = z.string().trim().toLowerCase()
@@ -112,10 +112,9 @@ module.exports = function authRoutes({ db, config }) {
       if (db.prepare('SELECT 1 FROM users WHERE username = ?').get(d.username)) return fail('That username is taken. Please choose another.');
 
       const userId = db.transaction(() => {
-        const r = db.prepare('INSERT INTO users (username, display_name, password_hash, role) VALUES (?, ?, ?, ?)')
-          .run(d.username, d.display_name, hashPassword(d.password), invite.role);
-        markCodeUsed(db, invite.id, r.lastInsertRowid);
-        return r.lastInsertRowid;
+        const newId = accountFromInvite(db, invite, { username: d.username, displayName: d.display_name, passwordHash: hashPassword(d.password) });
+        markCodeUsed(db, invite.id, newId);
+        return newId;
       })();
       delete req.session.pendingInvite;
       req.session.returnTo = '/account';

@@ -1,0 +1,22 @@
+<div class="wrap admin">
+  <%- include('_nav') %>
+  <div class="admin-main stack">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Page text</h1>
+      <p class="muted">Change the wording of the website’s pages. No HTML needed: type plain text, and use the formatting buttons for bold, links, headings and lists.</p>
+    </div>
+    <div class="page-list">
+      <% pages.forEach((p) => { %>
+        <a class="panel page-card plain" href="/admin/pages/<%= p.key %>">
+          <span>
+            <strong><%= p.name %></strong>
+            <span class="muted small"><%= p.path %> · <%= p.fields.length %> text<%= p.fields.length === 1 ? '' : 's' %> · <%= p.edited ? `${p.edited.n} changed, last on ${fmt.postedOn(p.edited.updated_at)}` : 'original text' %></span>
+          </span>
+          <span aria-hidden="true">&rarr;</span>
+        </a>
+      <% }) %>
+    </div>
+    <p class="muted small">Announcements, activities and gallery categories have their own pages in this menu.</p>
+  </div>
+</div>

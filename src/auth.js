@@ -1,6 +1,6 @@
 const passport = require('passport');
 const { Strategy: GoogleStrategy } = require('passport-google-oauth20');
-const { findUsableCode, markCodeUsed } = require('./lib/codes');
+const { findUsableCode, markCodeUsed, accountFromInvite } = require('./lib/codes');
 
 const PUBLIC_FIELDS = 'id, username, display_name, email, role, status, google_id, bio, password_hash IS NOT NULL AS has_password';
 
@@ -53,14 +53,13 @@ function setupPassport({ db, config }) {
       if (!invite) {
         return done(null, false, { message: 'No club account uses this Google account yet. Ask a club administrator for an invite code, then join with it.' });
       }
-      if (email && db.prepare('SELECT 1 FROM users WHERE email = ?').get(email)) {
+      if (email && db.prepare('SELECT 1 FROM users WHERE email = ? AND id != ?').get(email, invite.user_id || 0)) {
         return done(null, false, { message: 'A member with this email already exists. Sign in with your username and link Google from your account page.' });
       }
       const userId = db.transaction(() => {
-        const r = db.prepare(`INSERT INTO users (display_name, email, email_verified, google_id, role)
-                              VALUES (?, ?, ?, ?, ?)`).run(name, email, email ? 1 : 0, googleId, invite.role);
-        markCodeUsed(db, invite.id, r.lastInsertRowid);
-        return r.lastInsertRowid;
+        const newId = accountFromInvite(db, invite, { displayName: invite.user_id ? null : name, email, googleId });
+        markCodeUsed(db, invite.id, newId);
+        return newId;
       })();
       delete req.session.pendingInvite;
       return done(null, findUserById(db, userId));

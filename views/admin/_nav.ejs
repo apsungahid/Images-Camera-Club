@@ -1,11 +1,22 @@
-<% const adminLink = (href, label) => `<a href="${href}"${path.replace(/\/$/, '') === href ?' aria-current="page"' : ''}>${label}</a>`; %>
+<%
+  // Admin menu. To add a maintenance page later, add a line to the right section here.
+  const adminSections = [
+    { label: null, links: [['/admin', 'Overview']] },
+    { label: 'People', links: [['/admin/members', 'Members & years'], ['/admin/invites', 'Invite codes']] },
+    { label: 'Website', links: [['/admin/pages', 'Page text'], ['/admin/announcements', 'Announcements'], ['/admin/events', 'Activities']] },
+    { label: 'Gallery', links: [['/admin/categories', 'Categories'], ['/admin/photos', 'Photos']] },
+    { label: 'Members portal', links: [['/admin/forms', 'Contests & forms']] },
+  ];
+  const here = path.replace(/\/$/, '');
+  const isCurrent = (href) => (href === '/admin' ? here === '/admin' : here === href || here.startsWith(`${href}/`));
+%>
 <nav class="admin-nav" aria-label="Administration">
-  <span class="label">Administration</span>
-  <%- adminLink('/admin', 'Overview') %>
-  <%- adminLink('/admin/invites', 'Invite codes') %>
-  <%- adminLink('/admin/members', 'Members') %>
-  <%- adminLink('/admin/categories', 'Gallery categories') %>
-  <%- adminLink('/admin/photos', 'Photos') %>
-  <%- adminLink('/admin/announcements', 'Announcements') %>
-  <%- adminLink('/admin/events', 'Activities') %>
+  <% adminSections.forEach((section) => { %>
+    <div class="admin-nav-group">
+      <% if (section.label) { %><span class="label"><%= section.label %></span><% } %>
+      <% section.links.forEach(([href, label]) => { %>
+        <a href="<%= href %>"<%- isCurrent(href) ? ' aria-current="page"' : '' %>><%= label %></a>
+      <% }) %>
+    </div>
+  <% }) %>
 </nav>

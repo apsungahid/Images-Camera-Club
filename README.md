@@ -15,6 +15,10 @@ npm run dev                # http://localhost:3001
 Open `/join`, enter the admin code and create your account. From **Admin › Invite codes** you can
 then create invite codes for members.
 
+For a quick look at the admin screens on your own computer only, `npm run dev-admin` creates a
+demo administrator: username `demo.admin`, password `local-demo-admin`. The script refuses to
+run in production; never use these details on the live site.
+
 ## Tests
 
 ```powershell

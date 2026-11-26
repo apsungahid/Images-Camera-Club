@@ -8,6 +8,9 @@ function csrfValid(req) {
 
 function csrfRefused(res) {
   res.status(403);
+  if (/\/api(\/|\?|$)/.test(res.req.originalUrl)) {
+    return res.json({ error: 'Your session expired. Please refresh the page and try again.' });
+  }
   return res.render('pages/error', { title: 'Session expired', message: 'Your form expired. Please go back, refresh the page and try again.' });
 }
 
@@ -21,7 +24,10 @@ function csrf(req, res, next) {
   res.locals.csrfToken = req.session.csrf;
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
   if (req.is('multipart/form-data')) {
-    return UPLOAD_PATHS.has(req.path) ? next() : csrfRefused(res);
+    // Browser forms with a file: checked by acceptUpload once the form is read.
+    if (UPLOAD_PATHS.has(req.path)) return next();
+    // Uploads sent by the site's own scripts carry the token in a header.
+    return csrfValid(req) ? next() : csrfRefused(res);
   }
   return csrfValid(req) ? next() : csrfRefused(res);
 }

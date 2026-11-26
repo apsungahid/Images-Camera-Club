@@ -1,0 +1,86 @@
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Members only</p>
+    <h1><%- md.inline(c.title) %></h1>
+    <div class="lede"><%- md.blocks(c.intro) %></div>
+  </div>
+</section>
+
+<section class="section flush-top">
+  <div class="wrap portal-grid">
+    <div class="stack">
+      <div class="panel portal-section" id="contests">
+        <p class="eyebrow">Contests</p>
+        <h2>Submit to a contest</h2>
+        <div class="article-body small-body"><%- md.blocks(c.contests_text) %></div>
+        <% if (contests.length) { %>
+          <ul class="contest-list">
+            <% contests.forEach((f) => { %>
+              <li>
+                <a class="contest-item plain" href="/members/forms/<%= f.id %>">
+                  <span class="contest-main">
+                    <strong><%= f.title %></strong>
+                    <span class="muted small">
+                      <% if (f.state === 'open') { %><%= f.closes_at ? `Closes ${fmt.eventDay(f.closes_at)}, ${fmt.eventTime(f.closes_at)}` : 'Open' %><% } else { %><%= f.state === 'locked' ? 'Temporarily closed' : 'Closed' %><% } %>
+                    </span>
+                  </span>
+                  <span class="contest-status">
+                    <% if (f.my_count > 0) { %><span class="tag tag-members">Sent ✓</span><% } else { %><span class="btn btn-sm">Enter</span><% } %>
+                  </span>
+                </a>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <div class="contest-empty"><%- md.inline(c.no_contests) %></div>
+        <% } %>
+      </div>
+
+      <div class="panel portal-section">
+        <div class="section-head tight-head">
+          <div><p class="eyebrow">Schedule</p><h2>Coming up</h2></div>
+          <a class="btn btn-ghost btn-sm" href="/events">All activities</a>
+        </div>
+        <% if (events.length) { %>
+          <ul class="event-list compact"><% events.forEach((ev) => { %><%- include('../partials/event', { ev, showDesc: false }) %><% }) %></ul>
+        <% } else { %>
+          <p class="muted flush">Nothing scheduled yet.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="portal-links">
+        <a class="panel portal-link" href="/account/photos">
+          <span><span class="eyebrow flush">Gallery</span><strong>Your photos</strong><span class="muted small"><%= photoCount %> of <%= photoLimit %> uploaded</span></span>
+          <span aria-hidden="true">&rarr;</span>
+        </a>
+        <a class="panel portal-link" href="/gallery">
+          <span><span class="eyebrow flush">Gallery</span><strong>Browse the gallery</strong></span>
+          <span aria-hidden="true">&rarr;</span>
+        </a>
+        <a class="panel portal-link" href="/account">
+          <span><span class="eyebrow flush">Account</span><strong>Profile &amp; password</strong></span>
+          <span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+
+      <div class="panel portal-section">
+        <p class="eyebrow">News</p>
+        <h2>Latest announcements</h2>
+        <% if (announcements.length) { %>
+          <ul class="note-list">
+            <% announcements.forEach((a) => { %>
+              <li>
+                <div class="article-meta tight"><span class="small"><%= fmt.postedOn(a.published_at) %></span><% if (a.visibility === 'members') { %><span class="tag tag-members">Members</span><% } %></div>
+                <h3 class="small-h3"><a href="/announcements/<%= a.id %>"><%= a.title %></a></h3>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p class="muted flush">No announcements yet.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</section>

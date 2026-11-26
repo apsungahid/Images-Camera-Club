@@ -1,0 +1,12 @@
+<section class="section sf-fill-section">
+  <div class="wrap sf-fill">
+    <p class="eyebrow"><a class="plain" href="/members">&larr; Members’ portal</a></p>
+    <% if (!form.published) { %>
+      <div class="notice sf-preview-note"><div><strong>Preview.</strong> This form is a draft: members cannot see it, and answers cannot be sent until it is published.</div></div>
+    <% } %>
+    <div class="panel" id="sf-root" data-form-id="<%= form.id %>"><p class="muted">Loading form…</p></div>
+    <p class="muted small center-text">Your answers are saved on this device until you send them.</p>
+    <noscript><div class="alert alert-error">This form needs JavaScript turned on.</div></noscript>
+  </div>
+</section>
+<script src="/js/forms-fill.js" defer></script>

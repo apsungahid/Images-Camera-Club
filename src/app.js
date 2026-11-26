@@ -9,6 +9,7 @@ const { SqliteStore } = require('./lib/session-store');
 const { csrf } = require('./lib/security');
 const format = require('./lib/format');
 const camera = require('./lib/exposure');
+const { inline, blocks } = require('./lib/content');
 const site = require('./site');
 const { setupPassport } = require('./auth');
 
@@ -45,7 +46,13 @@ function createApp({ db, config }) {
   app.use('/media', express.static(path.resolve(config.uploadsDir), {
     immutable: true, maxAge: '365d', index: false, dotfiles: 'deny', fallthrough: false,
   }));
+  // A missing photo gets a plain "not found" (the page layout is not set up this early).
+  // eslint-disable-next-line no-unused-vars
+  app.use('/media', (err, req, res, next) => res.status(err.status || 404).type('text').send('Not found'));
   app.use(express.urlencoded({ extended: false, limit: '100kb' }));
+  app.use(express.json({ limit: '1mb' }));
+
+  require('./forms/storage').setRoot(config.formsDir || 'data/forms');
 
   const store = new SqliteStore(db);
   app.locals.sessionStore = store;
@@ -70,6 +77,7 @@ function createApp({ db, config }) {
     res.locals.site = site;
     res.locals.fmt = format;
     res.locals.camera = camera;
+    res.locals.md = { inline, blocks };
     res.locals.googleEnabled = Boolean(config.google);
     res.locals.flash = req.session.flash || null;
     res.locals.title = null;
@@ -84,6 +92,10 @@ function createApp({ db, config }) {
   app.use(require('./routes/auth')({ db, config }));
   app.use(require('./routes/account')({ db, config }));
   app.use(require('./routes/photos')({ db, config }));
+  app.use(require('./routes/members')({ db, config }));
+  app.use(require('./routes/member-forms')({ db }));
+  app.use('/admin', require('./routes/admin-members')({ db }));
+  app.use('/admin', require('./routes/admin-forms')({ db }));
   app.use('/admin', require('./routes/admin')({ db, config }));
 
   app.use((req, res) => {

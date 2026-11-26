@@ -1,9 +1,9 @@
 <section class="hero">
   <div class="hero-media<%= site.heroImage ? '' : ' empty' %>"<% if (site.heroImage) { %> style="background-image:url('<%= site.heroImage %>')"<% } %>></div>
   <div class="hero-content wrap">
-    <p class="eyebrow"><%= site.fullName %></p>
-    <h1>The island, seen <em>through our lenses.</em></h1>
-    <p class="lede">A community of Cebu photographers who walk, shoot, learn and exhibit together. From first cameras to seasoned professionals, we share one habit: looking closely.</p>
+    <p class="eyebrow"><%= c.hero_eyebrow %></p>
+    <h1><%- md.inline(c.hero_title) %></h1>
+    <p class="lede"><%- md.inline(c.hero_text) %></p>
     <div class="hero-actions">
       <a class="btn btn-light" href="/gallery">View the gallery</a>
       <a class="btn btn-ghost" href="/events">Upcoming activities</a>
@@ -17,10 +17,10 @@
     <div class="intro">
       <div>
         <p class="eyebrow">The club</p>
-        <h2>Made by photographers, for photographers.</h2>
+        <h2><%- md.inline(c.intro_title) %></h2>
       </div>
       <div>
-        <p class="lede">We meet to make pictures and to talk about them honestly. Members join photo walks around the island, learn from workshops and critiques, and test themselves in our internal contests and exhibits.</p>
+        <div class="lede"><%- md.blocks(c.intro_text) %></div>
         <a href="/about">More about the club &rarr;</a>
         <div class="stats">
           <% if (memberCount >= 10) { %><div class="stat"><strong><%= memberCount %></strong><span>Members</span></div><% } %>
@@ -35,9 +35,9 @@
 <section class="section">
   <div class="wrap">
     <div class="pillars">
-      <div class="pillar"><span class="num">i.</span><h3>Photo walks</h3><p>Early mornings in the old city, coastlines at golden hour, festivals in the streets: we go out and shoot together.</p></div>
-      <div class="pillar"><span class="num">ii.</span><h3>Workshops &amp; critique</h3><p>Hands-on sessions on light, composition and editing, and friendly, honest reviews of each other's work.</p></div>
-      <div class="pillar"><span class="num">iii.</span><h3>Contests &amp; exhibits</h3><p>Themed internal contests through the year, and exhibits that bring our members' best photographs to the public.</p></div>
+      <% [['i.', c.pillar1_title, c.pillar1_text], ['ii.', c.pillar2_title, c.pillar2_text], ['iii.', c.pillar3_title, c.pillar3_text]].forEach(([n, h, t]) => { %>
+        <div class="pillar"><span class="num"><%= n %></span><h3><%- md.inline(h) %></h3><p><%- md.inline(t) %></p></div>
+      <% }) %>
     </div>
   </div>
 </section>
@@ -96,8 +96,8 @@
 <section class="section band-soft">
   <div class="wrap cta">
     <p class="eyebrow">Membership</p>
-    <h2>Shoot with us.</h2>
-    <p class="lede">Members get the full activity schedule, club announcements and a place to show their work. Already received an invite code from the club?</p>
+    <h2><%- md.inline(c.cta_title) %></h2>
+    <p class="lede"><%- md.inline(c.cta_text) %></p>
     <div class="hero-actions center">
       <a class="btn" href="/join">Join with an invite code</a>
       <a class="btn btn-ghost" href="/about#membership">How to become a member</a>

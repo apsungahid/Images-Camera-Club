@@ -8,9 +8,10 @@ const { createApp } = require('../src/app');
 async function startTestApp(overrides = {}) {
   const db = openDatabase(':memory:');
   const uploadsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'icc-uploads-'));
+  const formsDir = path.join(uploadsDir, 'forms');
   const config = {
     env: 'test', port: 0, siteUrl: 'http://localhost', sessionSecret: 'x'.repeat(48), dbPath: ':memory:', google: null,
-    uploadsDir, photoLimit: 50, watermark: true, ...overrides,
+    uploadsDir, formsDir, photoLimit: 50, watermark: true, ...overrides,
   };
   const app = createApp({ db, config });
   const server = await new Promise((resolve) => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
@@ -40,7 +41,7 @@ class Client {
     const setCookie = res.headers.get('set-cookie');
     if (setCookie) this.cookie = setCookie.split(';')[0];
     const text = await res.text();
-    const m = text.match(/name="_csrf" value="([^"]+)"/);
+    const m = text.match(/name="_csrf" value="([^"]+)"/) || text.match(/name="csrf-token" content="([^"]+)"/);
     if (m) this.csrf = m[1];
     return { status: res.status, location: res.headers.get('location'), text };
   }
@@ -57,9 +58,28 @@ class Client {
     const setCookie = res.headers.get('set-cookie');
     if (setCookie) this.cookie = setCookie.split(';')[0];
     const text = await res.text();
-    const m = text.match(/name="_csrf" value="([^"]+)"/);
+    const m = text.match(/name="_csrf" value="([^"]+)"/) || text.match(/name="csrf-token" content="([^"]+)"/);
     if (m) this.csrf = m[1];
     return { status: res.status, location: res.headers.get('location'), text };
+  }
+
+  // JSON request with the token in a header, like the site's own scripts.
+  async json(method, path, body) {
+    const headers = { 'x-csrf-token': this.csrf, cookie: this.cookie };
+    if (body !== undefined) headers['content-type'] = 'application/json';
+    const res = await fetch(this.base + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), redirect: 'manual' });
+    const type = res.headers.get('content-type') || '';
+    const raw = Buffer.from(await res.arrayBuffer());
+    return { status: res.status, type, raw, body: type.includes('json') ? JSON.parse(raw.toString() || 'null') : raw.toString() };
+  }
+
+  // Multipart answer with files, sent like forms-fill.js does (token in a header).
+  async sendForm(method, path, data, files = {}) {
+    const form = new FormData();
+    form.append('data', JSON.stringify(data));
+    for (const [field, f] of Object.entries(files)) form.append(field, new Blob([f.buffer], { type: f.type || 'image/jpeg' }), f.name || 'photo.jpg');
+    const res = await fetch(this.base + path, { method, headers: { cookie: this.cookie, 'x-csrf-token': this.csrf }, body: form, redirect: 'manual' });
+    return { status: res.status, body: await res.json().catch(() => null) };
   }
 
   async post(path, form) {

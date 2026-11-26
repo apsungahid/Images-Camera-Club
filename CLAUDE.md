@@ -17,8 +17,15 @@ Main purpose: showcase members' photographs. Some content is members-only.
 
 ## Planned later (design data so these fit without rework)
 - Guest inquiries for image usage rights, prints, and purchases (payments later, e.g. PayMongo).
-- Internal contest photo submissions using the owner's StickyForms.io — ask the owner for its
-  hand-off document before building this part.
+
+## Contests & forms (ported from StickyForms)
+- The owner's StickyForms app (`apsungahid/StickyForms`, local copy in `Documents/StickyForms`) was
+  ported into this site, not run separately: `src/forms/`, `src/routes/admin-forms.js`,
+  `src/routes/member-forms.js`, `public/js/forms-admin.js`, `public/js/forms-fill.js`.
+- Only administrators build forms (Admin › Contests & forms). Members answer published forms from
+  `/members` while signed in; each answer belongs to their account. No personal links, emailing or
+  separate sign-in.
+- Uploaded files are private, in `FORMS_DIR` (default `data/forms`), never under `/media`.
 
 ## Stack (same as the owner's Dual Crest HRIS, which shares the server)
 Node.js 22, Express, EJS, SQLite (better-sqlite3), passport + Google OAuth, express-session,

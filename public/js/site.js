@@ -19,6 +19,40 @@ document.addEventListener('click', (e) => {
   }
 });
 
+// Filters that apply as soon as a choice is made.
+document.addEventListener('change', (e) => {
+  if (e.target.matches('[data-autosubmit]')) e.target.form.requestSubmit();
+});
+
+// Formatting buttons for page text: wrap or prefix the selected text with the simple marks.
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.md-toolbar [data-md]');
+  if (!btn) return;
+  const area = document.getElementById(btn.closest('.md-toolbar').dataset.for);
+  const { selectionStart: a, selectionEnd: b, value } = area;
+  const selected = value.slice(a, b);
+  const lineStart = value.lastIndexOf('\n', a - 1) + 1;
+  let insert;
+  let from = a;
+  let to = b;
+  switch (btn.dataset.md) {
+    case 'bold': insert = `**${selected || 'bold text'}**`; break;
+    case 'italic': insert = `*${selected || 'italic text'}*`; break;
+    case 'link': {
+      const url = window.prompt('Link to (a web address, or a page such as /gallery):', 'https://');
+      if (!url) return;
+      insert = `[${selected || 'link text'}](${url.trim()})`;
+      break;
+    }
+    case 'heading': from = lineStart; insert = `## ${value.slice(lineStart, b).replace(/^#+\s*/, '') || 'Heading'}`; break;
+    case 'list': from = lineStart; insert = (value.slice(lineStart, b) || 'item').split('\n').map((l) => `- ${l.replace(/^[-*]\s+/, '')}`).join('\n'); break;
+    default: return;
+  }
+  area.focus();
+  area.setRangeText(insert, from, to, 'select');
+  area.dispatchEvent(new Event('input', { bubbles: true }));
+});
+
 // Ask before destructive actions.
 document.addEventListener('submit', (e) => {
   const msg = e.target.dataset.confirm;

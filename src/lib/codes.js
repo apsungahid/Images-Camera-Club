@@ -39,10 +39,30 @@ function findUsableCode(db, code, purpose) {
        AND expires_at > datetime('now')`).get(hashCode(code), purpose);
 }
 
+/**
+ * Creates the website account an invite code is for. If the admin made the code for someone
+ * already on the roster (no account yet), that entry gets the sign-in details, so their
+ * membership years stay with them. Otherwise a new member is created.
+ */
+function accountFromInvite(db, invite, { username = null, displayName, passwordHash = null, email = null, googleId = null }) {
+  const existing = invite.user_id && db.prepare(`SELECT id FROM users WHERE id = ?
+    AND NOT ((username IS NOT NULL AND password_hash IS NOT NULL) OR google_id IS NOT NULL)`).get(invite.user_id);
+  if (existing) {
+    db.prepare(`UPDATE users SET username = ?, display_name = COALESCE(?, display_name), password_hash = ?,
+                  email = COALESCE(?, email), email_verified = CASE WHEN ? IS NOT NULL THEN 1 ELSE email_verified END,
+                  google_id = ?, role = ?, status = 'active' WHERE id = ?`)
+      .run(username, displayName, passwordHash, email, email, googleId, invite.role, existing.id);
+    return existing.id;
+  }
+  return db.prepare(`INSERT INTO users (username, display_name, password_hash, email, email_verified, google_id, role)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)`)
+    .run(username, displayName, passwordHash, email, email ? 1 : 0, googleId, invite.role).lastInsertRowid;
+}
+
 function markCodeUsed(db, id, userId) {
   const r = db.prepare(`UPDATE access_codes SET used_by = ?, used_at = datetime('now')
                          WHERE id = ? AND used_at IS NULL`).run(userId, id);
   if (r.changes !== 1) throw new Error('Code already used');
 }
 
-module.exports = { generateCode, normalizeCode, hashCode, createAccessCode, findUsableCode, markCodeUsed };
+module.exports = { generateCode, normalizeCode, hashCode, createAccessCode, findUsableCode, markCodeUsed, accountFromInvite };

@@ -1,0 +1,44 @@
+<div class="wrap admin">
+  <%- include('_nav') %>
+  <div class="admin-main stack">
+    <div>
+      <p class="eyebrow"><a class="plain" href="/admin/pages">&larr; Page text</a></p>
+      <h1><%= page.name %></h1>
+      <p class="muted">Changes go live as soon as you save. Clear a box to bring back the original text. <a href="<%= page.path %>" target="_blank" rel="noopener">View the page &nearr;</a></p>
+    </div>
+
+    <form class="form panel" method="post" action="/admin/pages/<%= pageKey %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% page.fields.forEach((f) => { const id = `f-${f.key}`; %>
+        <div class="field">
+          <label for="<%= id %>"><%= f.label %></label>
+          <% if (f.type === 'line') { %>
+            <input id="<%= id %>" name="<%= f.key %>" type="text" maxlength="300" value="<%= values[f.key] %>" placeholder="<%= f.default %>">
+          <% } else { %>
+            <% if (f.type === 'rich') { %>
+              <div class="md-toolbar" role="toolbar" aria-label="Formatting for <%= f.label %>" data-for="<%= id %>">
+                <button type="button" data-md="bold" title="Bold"><strong>B</strong></button>
+                <button type="button" data-md="italic" title="Italic"><em>I</em></button>
+                <button type="button" data-md="link" title="Link">Link</button>
+                <button type="button" data-md="heading" title="Heading">Heading</button>
+                <button type="button" data-md="list" title="List">• List</button>
+              </div>
+            <% } %>
+            <textarea id="<%= id %>" name="<%= f.key %>" rows="<%= f.type === 'rich' ? 16 : 4 %>" maxlength="20000"><%= values[f.key] %></textarea>
+          <% } %>
+          <% if (f.hint) { %><span class="hint"><%= f.hint %></span><% } %>
+        </div>
+      <% }) %>
+      <div class="inline-form"><button class="btn" type="submit">Save changes</button><a class="btn btn-ghost" href="/admin/pages">Cancel</a></div>
+    </form>
+
+    <div class="panel format-help">
+      <h2>Formatting</h2>
+      <table>
+        <tbody>
+          <% formatHelp.forEach(([type, gives]) => { %><tr><td><code><%= type %></code></td><td class="muted"><%= gives %></td></tr><% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

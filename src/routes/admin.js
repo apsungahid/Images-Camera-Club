@@ -4,6 +4,7 @@ const { requireAdmin } = require('../lib/security');
 const { createAccessCode } = require('../lib/codes');
 const { uniqueSlug } = require('../lib/categories');
 const { removeFiles } = require('../lib/images');
+const { PAGES, FORMAT_HELP, pageContent, savePageContent } = require('../lib/content');
 
 const localDateTime = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, 'Please enter a valid date and time.');
 
@@ -88,39 +89,31 @@ module.exports = function adminRoutes({ db, config }) {
     back(res, '/invites');
   });
 
-  // ---- Members
-  router.get('/members', (req, res) => {
-    const members = db.prepare(`SELECT id, username, display_name, email, role, status, google_id IS NOT NULL AS has_google,
-      password_hash IS NOT NULL AS has_password, created_at, last_login_at FROM users ORDER BY display_name COLLATE NOCASE`).all();
-    const resetCode = req.session.resetCode || null;
-    delete req.session.resetCode;
-    res.render('admin/members', { title: 'Members', members, resetCode });
+  // Members and membership years: see admin-members.js
+
+  // ---- Page text
+  router.get('/pages', (req, res) => {
+    const edited = db.prepare('SELECT page, COUNT(*) AS n, MAX(updated_at) AS updated_at FROM page_content GROUP BY page').all();
+    const pages = Object.entries(PAGES).map(([key, p]) => ({ key, ...p, edited: edited.find((e) => e.page === key) }));
+    res.render('admin/pages', { title: 'Page text', pages });
   });
 
-  router.post('/members/:id', (req, res) => {
-    const memberId = id(req);
-    if (memberId === req.user.id) {
-      req.flash('error', 'You cannot change your own role or status. Ask another administrator.');
-      return back(res, '/members');
-    }
-    const role = ['member', 'admin'].includes(req.body.role) ? req.body.role : null;
-    const status = ['active', 'suspended'].includes(req.body.status) ? req.body.status : null;
-    if (!role || !status) return back(res, '/members');
-    db.prepare('UPDATE users SET role = ?, status = ? WHERE id = ?').run(role, status, memberId);
-    if (status === 'suspended') {
-      db.prepare("DELETE FROM sessions WHERE json_extract(data, '$.passport.user') = ?").run(memberId);
-    }
-    req.flash('success', 'The member has been updated.');
-    return back(res, '/members');
+  router.get('/pages/:page', (req, res, next) => {
+    const page = PAGES[req.params.page];
+    if (!page || !Object.hasOwn(PAGES, req.params.page)) return next();
+    return res.render('admin/page-edit', {
+      title: `Edit: ${page.name}`, pageKey: req.params.page, page, values: pageContent(db, req.params.page), formatHelp: FORMAT_HELP,
+    });
   });
 
-  router.post('/members/:id/reset-code', (req, res) => {
-    const member = db.prepare('SELECT id, display_name FROM users WHERE id = ?').get(id(req));
-    if (!member) return back(res, '/members');
-    const { code, expiresAt } = createAccessCode(db, { purpose: 'reset', userId: member.id, createdBy: req.user.id, days: 2 });
-    req.session.resetCode = { code, name: member.display_name, expiresAt: expiresAt.toISOString() };
-    return back(res, '/members');
+  router.post('/pages/:page', (req, res, next) => {
+    if (!Object.hasOwn(PAGES, req.params.page)) return next();
+    savePageContent(db, req.params.page, req.body, req.user.id);
+    req.flash('success', `${PAGES[req.params.page].name} has been saved. It is live now.`);
+    return back(res, `/pages/${req.params.page}`);
   });
+
+  // Contests & forms (ported from StickyForms): see admin-forms.js
 
   // ---- Announcements
   router.get('/announcements', (req, res) => {

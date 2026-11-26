@@ -17,6 +17,7 @@
       <%- navLink('/events', 'Activities') %>
       <%- navLink('/announcements', 'News') %>
       <%- navLink('/about', 'About') %>
+      <% if (user) { %><%- navLink('/members', 'Members') %><% } %>
       <% if (isAdmin) { %><%- navLink('/admin', 'Admin') %><% } %>
       <span class="nav-actions">
         <% if (user) { %>

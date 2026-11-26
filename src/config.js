@@ -11,6 +11,8 @@ function loadConfig(env = process.env) {
     uploadsDir: env.UPLOADS_DIR || 'uploads',
     photoLimit: Number(env.PHOTO_LIMIT || 50),
     watermark: env.WATERMARK !== 'off',
+    // Private files from member forms (contest entries). Never served publicly.
+    formsDir: env.FORMS_DIR || 'data/forms',
     google: env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
       ? { clientID: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET }
       : null,

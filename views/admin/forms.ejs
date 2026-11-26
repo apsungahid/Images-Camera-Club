@@ -1,0 +1,13 @@
+<div class="wrap admin">
+  <%- include('_nav') %>
+  <div class="admin-main stack">
+    <div>
+      <p class="eyebrow">Members portal</p>
+      <h1>Contests &amp; forms</h1>
+      <p class="muted">Build contest entry forms, sign-ups and polls. Only administrators create forms; members answer published forms from the <a href="/members">Members’ portal</a>.</p>
+    </div>
+    <div id="sf-admin" data-max-upload-mb="<%= maxUploadMb %>"><p class="muted">Loading…</p></div>
+    <noscript><div class="alert alert-error">The form builder needs JavaScript turned on.</div></noscript>
+  </div>
+</div>
+<script src="/js/forms-admin.js" defer></script>

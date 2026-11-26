@@ -2,19 +2,11 @@
   <div class="wrap narrow">
     <p class="eyebrow">About</p>
     <h1><%= site.fullName %></h1>
-    <p class="lede"><%= site.tagline %></p>
+    <div class="lede"><%- md.blocks(c.lede) %></div>
   </div>
 </section>
 <section class="section flush-top">
-  <%# Placeholder copy: replace with the club's own history, mission and officers. %>
   <div class="wrap narrow article-body">
-    <h2>Who we are</h2>
-    <p>The <%= site.fullName %> brings together photographers from across Cebu: hobbyists, students and working professionals who share a love of making pictures. We learn from each other, shoot together and celebrate our members' work.</p>
-    <h2>What we do</h2>
-    <p>Through the year the club organises photo walks, workshops, critique sessions, internal contests and public exhibits. Members see the full schedule and club news on this website once they sign in.</p>
-    <h2 id="membership">Membership</h2>
-    <p>New members are welcomed through the club. Once accepted, a club administrator gives you a personal invite code that you use to <a href="/join">create your account</a>.</p>
-    <h2>Use of photographs</h2>
-    <p>Every photograph on this site remains the property of the member who made it. Please do not download, copy or reuse any image without the photographer's written permission.</p>
+    <%- md.blocks(c.body) %>
   </div>
 </section>

@@ -1,0 +1,116 @@
+<div class="wrap admin">
+  <%- include('_nav') %>
+  <div class="admin-main stack">
+    <div>
+      <p class="eyebrow"><a class="plain" href="/admin/members">&larr; Members</a></p>
+      <h1><%= member.display_name %></h1>
+      <p class="muted">
+        <% if (member.has_login) { %>Website account<%= member.username ? `: ${member.username}` : '' %> · <%= [member.has_password ? 'password' : null, member.has_google ? 'Google' : null].filter(Boolean).join(' and ') %> sign-in<% } else { %>On the roster, no website account<% } %>
+        · <%= photoCount %> photo<%= photoCount === 1 ? '' : 's' %>
+      </p>
+    </div>
+
+    <% if (code) { %>
+      <div class="code-reveal" role="status">
+        <span class="label"><%= code.kind === 'invite' ? `Invite code for ${member.display_name}` : `Password reset code for ${member.display_name}` %></span>
+        <span class="code"><%= code.code %></span>
+        <span class="muted small">Copy it now: it will not be shown again. <%= code.kind === 'invite' ? 'Valid for 14 days, once. Their membership years stay with the account they create.' : 'Valid for 2 days, once.' %></span>
+        <% if (code.kind === 'invite') { %>
+          <button class="btn btn-ghost btn-sm" type="button" data-copy="Your invite code for the <%= site.fullName %> website: <%= code.code %>. Join at <%= site.url %>/join?code=<%= code.code %>">Copy invite message</button>
+        <% } else { %>
+          <button class="btn btn-ghost btn-sm" type="button" data-copy="Your password reset code for the <%= site.fullName %> website: <%= code.code %>. Reset at <%= site.url %>/reset?code=<%= code.code %>">Copy reset message</button>
+        <% } %>
+      </div>
+    <% } %>
+
+    <div class="two-col">
+      <div class="panel">
+        <h2>Membership years</h2>
+        <% if (years.length) { %>
+          <ul class="year-chips">
+            <% years.forEach((y) => { %>
+              <li>
+                <a class="plain" href="/admin/members?year=<%= y %>"><%= y %></a>
+                <form method="post" action="/admin/members/<%= member.id %>/years/<%= y %>/delete">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit" aria-label="Remove <%= y %>" title="Remove <%= y %>">&times;</button>
+                </form>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p class="muted">No years recorded yet.</p>
+        <% } %>
+        <form class="inline-form" method="post" action="/admin/members/<%= member.id %>/years">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input class="year-input" name="year" type="text" inputmode="numeric" placeholder="e.g. 2019, 2021" aria-label="Years to add" required>
+          <button class="btn btn-sm" type="submit">Add</button>
+        </form>
+        <% if (!years.includes(currentYear)) { %>
+          <form class="quick-year" method="post" action="/admin/members/<%= member.id %>/years">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="year" value="<%= currentYear %>">
+            <button class="link-btn small" type="submit">+ Member in <%= currentYear %></button>
+          </form>
+        <% } %>
+      </div>
+
+      <div class="panel">
+        <h2>Website access</h2>
+        <% if (!member.has_login) { %>
+          <p class="muted">Create an invite code so <%= member.display_name.split(' ')[0] %> can make a website account. It is attached to this record, so their years and details stay together.</p>
+          <form method="post" action="/admin/members/<%= member.id %>/invite">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn btn-sm" type="submit">Create invite code</button>
+          </form>
+        <% } else { %>
+          <p class="muted">If they forget their password, create a reset code and send it to them privately.</p>
+          <form method="post" action="/admin/members/<%= member.id %>/reset-code" data-confirm="Create a password reset code for <%= member.display_name %>?">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn btn-ghost btn-sm" type="submit">Create reset code</button>
+          </form>
+        <% } %>
+        <p class="muted small" style="margin-top:16px">Joined the website <%= member.has_login ? fmt.postedOn(member.created_at) : '—' %> · Last sign-in <%= member.last_login_at ? fmt.postedOn(member.last_login_at) : '—' %></p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Details</h2>
+      <form class="form" method="post" action="/admin/members/<%= member.id %>">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="row">
+          <div class="field"><label for="d-name">Full name</label><input id="d-name" name="display_name" type="text" maxlength="80" required value="<%= member.display_name %>"></div>
+          <div class="field"><label for="d-email">Email</label><input id="d-email" name="email" type="email" maxlength="200" value="<%= member.email || '' %>"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="d-phone">Phone</label><input id="d-phone" name="phone" type="text" maxlength="40" value="<%= member.phone || '' %>"></div>
+          <div class="row">
+            <div class="field">
+              <label for="d-role">Role</label>
+              <select id="d-role" name="role" <%= member.id === user.id ? 'disabled' : '' %>><option value="member" <%= member.role === 'member' ? 'selected' : '' %>>Member</option><option value="admin" <%= member.role === 'admin' ? 'selected' : '' %>>Administrator</option></select>
+            </div>
+            <div class="field">
+              <label for="d-status">Status</label>
+              <select id="d-status" name="status" <%= member.id === user.id ? 'disabled' : '' %>><option value="active" <%= member.status === 'active' ? 'selected' : '' %>>Active</option><option value="suspended" <%= member.status === 'suspended' ? 'selected' : '' %>>Suspended</option></select>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="d-notes">Notes (administrators only)</label>
+          <textarea id="d-notes" name="admin_notes" rows="4" maxlength="2000" placeholder="e.g. Treasurer 2019–2020. Rejoined after moving back to Cebu."><%= member.admin_notes || '' %></textarea>
+        </div>
+        <div class="inline-form">
+          <button class="btn" type="submit">Save details</button>
+          <% if (member.id === user.id) { %><span class="muted small">You cannot change your own role or status.</span><% } %>
+        </div>
+      </form>
+    </div>
+
+    <% if (!member.has_login) { %>
+      <form method="post" action="/admin/members/<%= member.id %>/delete" data-confirm="Remove <%= member.display_name %> from the roster, including their membership years? This cannot be undone.">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn-danger btn-sm" type="submit">Remove from roster</button>
+      </form>
+    <% } %>
+  </div>
+</div>

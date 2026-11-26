@@ -1,6 +1,7 @@
 const express = require('express');
 const { nowLocal } = require('../lib/format');
 const { catalogues, photosInCategory } = require('../lib/categories');
+const { pageContent } = require('../lib/content');
 
 // Guests see 'public' items; signed-in members also see 'members' items.
 const visibleTo = (req) => (req.user ? ['public', 'members'] : ['public']);
@@ -27,6 +28,7 @@ module.exports = function publicRoutes({ db }) {
     res.render('pages/home', {
       title: null,
       bodyClass: 'home on-dark',
+      c: pageContent(db, 'home'),
       featured: photoQuery(vis, 'AND p.featured = 1', 9),
       events: upcomingEvents(vis, 3),
       announcements: latestAnnouncements(vis, 3),
@@ -53,7 +55,7 @@ module.exports = function publicRoutes({ db }) {
     });
   });
 
-  router.get('/about', (req, res) => res.render('pages/about', { title: 'About the club' }));
+  router.get('/about', (req, res) => res.render('pages/about', { title: 'About the club', c: pageContent(db, 'about') }));
 
   router.get('/events', (req, res) => {
     const vis = visibleTo(req);
