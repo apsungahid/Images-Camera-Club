@@ -1,0 +1,113 @@
+<% const used = photos.length; const full = used >= limit; %>
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow"><a class="plain" href="/account">&larr; Your account</a></p>
+    <h1>Your photos</h1>
+    <div class="quota" aria-label="<%= used %> of <%= limit %> photos used">
+      <div class="quota-bar"><span style="width:<%= Math.min(100, Math.round(used / limit * 100)) %>%"></span></div>
+      <span class="small muted"><strong><%= used %></strong> of <%= limit %> photos</span>
+    </div>
+  </div>
+</section>
+
+<section class="section flush-top">
+  <div class="wrap stack">
+    <div class="notice" role="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v.5M12 11v5.5" stroke-linecap="round"/></svg>
+      <div>
+        <strong>Photos you upload are publicly viewable.</strong>
+        Anyone visiting the website can see them in the gallery. To protect your work, the site only shows a resized copy (at most 1600&nbsp;px on the long side)<%= locals.watermark !== false ? ' with a small © credit in the corner' : '' %>, removes camera and location data, and does not keep your original file.
+      </div>
+    </div>
+
+    <% if (error) { %><div class="alert alert-error flush" role="alert"><%= error %></div><% } %>
+
+    <% if (!categories.length) { %>
+      <div class="empty-state"><h3>Uploads open soon</h3><p>A club administrator needs to set up the gallery categories first.</p></div>
+    <% } else if (full) { %>
+      <div class="panel"><h2>You have reached <%= limit %> photos</h2><p class="muted flush">To upload a new photo, delete one of your current photos below.</p></div>
+    <% } else { %>
+      <details class="panel" <%= error || !used ? 'open' : '' %>>
+        <summary>Upload a photo</summary>
+        <form class="form" method="post" action="/account/photos" enctype="multipart/form-data">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="field">
+            <label for="photo">Photo</label>
+            <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required>
+            <span class="hint">JPEG, PNG or WebP, at least 1000&nbsp;px on the long side, up to 25&nbsp;MB.</span>
+          </div>
+          <div class="field">
+            <label for="title">Title</label>
+            <input id="title" name="title" type="text" maxlength="120" required value="<%= values.title || '' %>">
+          </div>
+          <div class="field">
+            <label for="main_category_id">Main category</label>
+            <select id="main_category_id" name="main_category_id" required>
+              <option value="">Choose…</option>
+              <% categories.forEach((c) => { %><option value="<%= c.id %>" <%= Number(values.main_category_id) === c.id ? 'selected' : '' %>><%= c.name %></option><% }) %>
+            </select>
+          </div>
+          <fieldset class="field checks">
+            <legend class="label">Also show in</legend>
+            <div class="check-grid">
+              <% categories.forEach((c) => { %>
+                <label class="check"><input type="checkbox" name="categories" value="<%= c.id %>" <%= (values.categories || []).includes(c.id) ? 'checked' : '' %>> <%= c.name %></label>
+              <% }) %>
+            </div>
+            <span class="hint">Optional. The photo always appears in its main category.</span>
+          </fieldset>
+          <div class="field">
+            <label for="caption">Caption</label>
+            <textarea id="caption" name="caption" rows="3" maxlength="1000" placeholder="Optional: the story, place or settings."><%= values.caption || '' %></textarea>
+          </div>
+          <label class="check ack"><input type="checkbox" name="public_ack" value="1" required> I understand this photo will be publicly viewable by anyone visiting the website, and I confirm it is my own work.</label>
+          <div><button class="btn" type="submit">Upload photo</button></div>
+        </form>
+      </details>
+    <% } %>
+
+    <% if (photos.length) { %>
+      <div class="my-photos">
+        <% photos.forEach((p) => { %>
+          <article class="my-photo">
+            <img src="/media/<%= p.thumb_key %>" alt="<%= p.title %>" loading="lazy" width="<%= p.width %>" height="<%= p.height %>">
+            <% if (editId === p.id) { %>
+              <form class="form my-photo-body" method="post" action="/account/photos/<%= p.id %>">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <div class="field"><label for="t-<%= p.id %>">Title</label><input id="t-<%= p.id %>" name="title" type="text" maxlength="120" required value="<%= p.title %>"></div>
+                <div class="field">
+                  <label for="m-<%= p.id %>">Main category</label>
+                  <select id="m-<%= p.id %>" name="main_category_id" required>
+                    <% categories.forEach((c) => { %><option value="<%= c.id %>" <%= p.main_category_id === c.id ? 'selected' : '' %>><%= c.name %></option><% }) %>
+                  </select>
+                </div>
+                <fieldset class="field checks">
+                  <legend class="label">Also show in</legend>
+                  <div class="check-grid">
+                    <% categories.forEach((c) => { %>
+                      <label class="check"><input type="checkbox" name="categories" value="<%= c.id %>" <%= p.categoryIds.includes(c.id) && c.id !== p.main_category_id ? 'checked' : '' %>> <%= c.name %></label>
+                    <% }) %>
+                  </div>
+                </fieldset>
+                <div class="field"><label for="c-<%= p.id %>">Caption</label><textarea id="c-<%= p.id %>" name="caption" rows="3" maxlength="1000"><%= p.caption || '' %></textarea></div>
+                <div class="inline-form"><button class="btn btn-sm" type="submit">Save</button><a class="btn btn-ghost btn-sm" href="/account/photos">Cancel</a></div>
+              </form>
+            <% } else { %>
+              <div class="my-photo-body">
+                <strong><%= p.title %></strong>
+                <span class="muted small"><%= categories.filter((c) => p.categoryIds.includes(c.id)).map((c) => c.id === p.main_category_id ? `${c.name} (main)` : c.name).join(' · ') %></span>
+                <div class="inline-form">
+                  <a class="btn btn-ghost btn-sm" href="/account/photos?edit=<%= p.id %>">Edit</a>
+                  <form method="post" action="/account/photos/<%= p.id %>/delete" data-confirm="Delete “<%= p.title %>”? It will be removed from the gallery. This cannot be undone.">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                  </form>
+                </div>
+              </div>
+            <% } %>
+          </article>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</section>

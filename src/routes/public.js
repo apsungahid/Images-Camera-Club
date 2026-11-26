@@ -1,5 +1,6 @@
 const express = require('express');
 const { nowLocal } = require('../lib/format');
+const { catalogues, photosInCategory } = require('../lib/categories');
 
 // Guests see 'public' items; signed-in members also see 'members' items.
 const visibleTo = (req) => (req.user ? ['public', 'members'] : ['public']);
@@ -25,7 +26,7 @@ module.exports = function publicRoutes({ db }) {
     const vis = visibleTo(req);
     res.render('pages/home', {
       title: null,
-      bodyClass: 'home',
+      bodyClass: 'home on-dark',
       featured: photoQuery(vis, 'AND p.featured = 1', 9),
       events: upcomingEvents(vis, 3),
       announcements: latestAnnouncements(vis, 3),
@@ -33,8 +34,23 @@ module.exports = function publicRoutes({ db }) {
     });
   });
 
+  // Catalogues: one per category that has photos, alphabetical, random cover on each load.
   router.get('/gallery', (req, res) => {
-    res.render('pages/gallery', { title: 'Gallery', photos: photoQuery(visibleTo(req), '', 200) });
+    res.set('Cache-Control', 'no-store');
+    res.render('pages/gallery', { title: 'Gallery', bodyClass: 'on-dark gallery-page', catalogues: catalogues(db, visibleTo(req)) });
+  });
+
+  router.get('/gallery/:slug', (req, res, next) => {
+    const vis = visibleTo(req);
+    const category = db.prepare('SELECT * FROM categories WHERE slug = ?').get(String(req.params.slug));
+    if (!category) return next();
+    const photos = photosInCategory(db, category.id, vis);
+    if (!photos.length) return next();
+    const cover = photos[Math.floor(Math.random() * photos.length)];
+    res.set('Cache-Control', 'no-store');
+    return res.render('pages/gallery-category', {
+      title: category.name, bodyClass: 'on-dark gallery-page', category, photos, cover, catalogues: catalogues(db, vis),
+    });
   });
 
   router.get('/about', (req, res) => res.render('pages/about', { title: 'About the club' }));

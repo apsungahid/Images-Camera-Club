@@ -101,7 +101,7 @@ Environment=PORT=3001
 Environment=TZ=Asia/Manila
 NoNewPrivileges=true
 ProtectSystem=strict
-ReadWritePaths=/srv/photoclub/data
+ReadWritePaths=/srv/photoclub/data /srv/photoclub/uploads /srv/photoclub-backups
 ProtectHome=true
 PrivateTmp=true
 
@@ -109,8 +109,9 @@ PrivateTmp=true
 WantedBy=multi-user.target
 ```
 
-Add `/srv/photoclub/uploads` (or wherever photos are stored) to `ReadWritePaths` if the app
-saves files.
+The ready-made unit is in the repository at `deploy/photoclub.service`. Create the photo folder once:
+`install -d -o photoclub -g photoclub -m 755 /srv/photoclub/uploads`, and set `UPLOADS_DIR=/srv/photoclub/uploads`
+in `.env`. Only resized copies are stored (about 0.5–1 MB per photo; 50 photos per member).
 
 ```bash
 systemctl daemon-reload

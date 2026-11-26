@@ -7,6 +7,10 @@ function loadConfig(env = process.env) {
     siteUrl: (env.SITE_URL || 'http://localhost:3001').replace(/\/$/, ''),
     sessionSecret: env.SESSION_SECRET,
     dbPath: env.DB_PATH || 'data/club.db',
+    // Resized photos only (originals are never kept). On the server: /srv/photoclub/uploads.
+    uploadsDir: env.UPLOADS_DIR || 'uploads',
+    photoLimit: Number(env.PHOTO_LIMIT || 50),
+    watermark: env.WATERMARK !== 'off',
     google: env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
       ? { clientID: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET }
       : null,

@@ -1,0 +1,35 @@
+<div class="wrap admin">
+  <%- include('_nav') %>
+  <div class="admin-main stack">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Photos</h1>
+      <p class="muted"><%= totals.n %> photo<%= totals.n === 1 ? '' : 's' %> using <%= (totals.bytes / 1048576).toFixed(1) %> MB of storage. Featured photos appear on the homepage.</p>
+    </div>
+    <% if (!items.length) { %>
+      <div class="empty-state"><h3>No photos yet</h3><p>Members upload photos from their account page.</p></div>
+    <% } else { %>
+      <div class="admin-photos">
+        <% items.forEach((p) => { %>
+          <div class="admin-photo">
+            <img src="/media/<%= p.thumb_key %>" alt="" loading="lazy">
+            <div class="admin-photo-body">
+              <strong><%= p.title %></strong>
+              <span class="muted small"><%= p.photographer %> · <%= p.main_category %></span>
+              <div class="inline-form">
+                <form method="post" action="/admin/photos/<%= p.id %>/feature">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="btn btn-ghost btn-sm" type="submit"><%= p.featured ? '★ Featured' : 'Feature' %></button>
+                </form>
+                <form method="post" action="/admin/photos/<%= p.id %>/delete" data-confirm="Remove “<%= p.title %>” by <%= p.photographer %> from the gallery? This deletes the photo and cannot be undone.">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="btn btn-danger btn-sm" type="submit">Remove</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</div>

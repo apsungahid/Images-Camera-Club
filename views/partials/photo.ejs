@@ -1,4 +1,4 @@
-<figure>
-  <img src="/media/<%= p.display_key %>" alt="<%= p.title %>, by <%= p.photographer %>" loading="lazy"<% if (p.width && p.height) { %> width="<%= p.width %>" height="<%= p.height %>"<% } %>>
+<figure class="protect">
+  <img src="/media/<%= p.thumb_key %>" alt="<%= p.title %>, by <%= p.photographer %>" loading="lazy" draggable="false" width="<%= p.width %>" height="<%= p.height %>">
   <figcaption><span class="title"><%= p.title %></span><span class="muted"><%= p.photographer %></span></figcaption>
 </figure>

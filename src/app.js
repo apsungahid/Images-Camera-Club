@@ -40,6 +40,10 @@ function createApp({ db, config }) {
   }));
 
   app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: production ? '7d' : 0 }));
+  // Resized member photos. File names are random and never reused, so they can be cached for good.
+  app.use('/media', express.static(path.resolve(config.uploadsDir), {
+    immutable: true, maxAge: '365d', index: false, dotfiles: 'deny', fallthrough: false,
+  }));
   app.use(express.urlencoded({ extended: false, limit: '100kb' }));
 
   const store = new SqliteStore(db);
@@ -67,6 +71,7 @@ function createApp({ db, config }) {
     res.locals.googleEnabled = Boolean(config.google);
     res.locals.flash = req.session.flash || null;
     res.locals.title = null;
+    res.locals.bodyClass = '';
     delete req.session.flash;
     req.flash = (type, message) => { req.session.flash = { type, message }; };
     next();
@@ -75,16 +80,20 @@ function createApp({ db, config }) {
 
   app.use(require('./routes/public')({ db }));
   app.use(require('./routes/auth')({ db, config }));
-  app.use(require('./routes/account')({ db }));
-  app.use('/admin', require('./routes/admin')({ db }));
+  app.use(require('./routes/account')({ db, config }));
+  app.use(require('./routes/photos')({ db, config }));
+  app.use('/admin', require('./routes/admin')({ db, config }));
 
   app.use((req, res) => {
     res.status(404).render('pages/error', { title: 'Page not found', message: 'The page you were looking for is not here.' });
   });
   // eslint-disable-next-line no-unused-vars
   app.use((err, req, res, next) => {
+    if (err.status === 404 || err.statusCode === 404) {
+      return res.status(404).render('pages/error', { title: 'Page not found', message: 'The page you were looking for is not here.' });
+    }
     console.error(err);
-    res.status(500).render('pages/error', { title: 'Something went wrong', message: 'Please try again in a moment.' });
+    return res.status(500).render('pages/error', { title: 'Something went wrong', message: 'Please try again in a moment.' });
   });
 
   return app;

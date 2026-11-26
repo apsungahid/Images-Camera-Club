@@ -1,0 +1,42 @@
+<section class="category-hero protect">
+  <div class="category-hero-img" style="background-image:url('/media/<%= cover.display_key %>')"></div>
+  <div class="category-hero-text wrap">
+    <p class="eyebrow"><%= photos.length %> photograph<%= photos.length === 1 ? '' : 's' %></p>
+    <h1><%= category.name %></h1>
+    <% if (category.description) { %><p class="lede"><%= category.description %></p><% } %>
+    <a class="btn btn-ghost" href="/gallery">All galleries</a>
+  </div>
+</section>
+
+<% if (catalogues.length > 1) { %>
+  <nav class="category-tabs" aria-label="Gallery categories">
+    <div class="wrap">
+      <% catalogues.forEach((c) => { %>
+        <a href="/gallery/<%= c.slug %>"<%- c.id === category.id ? ' aria-current="page"' : '' %>><%= c.name %></a>
+      <% }) %>
+    </div>
+  </nav>
+<% } %>
+
+<section class="category-photos">
+  <div class="wrap">
+    <div class="photo-grid protect" data-lightbox>
+      <% photos.forEach((p, i) => { %>
+        <a class="photo-tile" href="/media/<%= p.display_key %>" data-index="<%= i %>" data-title="<%= p.title %>" data-by="<%= p.photographer %>" data-caption="<%= p.caption || '' %>">
+          <img src="/media/<%= p.thumb_key %>" alt="<%= p.title %>, by <%= p.photographer %>" loading="lazy" draggable="false" width="<%= p.width %>" height="<%= p.height %>">
+          <span class="photo-tile-meta"><span class="title"><%= p.title %></span><span class="by"><%= p.photographer %></span></span>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<div class="lightbox" hidden aria-modal="true" role="dialog" aria-label="Photo viewer">
+  <button class="lightbox-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <button class="lightbox-nav prev" type="button" aria-label="Previous photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <figure class="lightbox-figure protect">
+    <img alt="" draggable="false">
+    <figcaption><span class="title"></span><span class="by"></span><span class="caption"></span></figcaption>
+  </figure>
+  <button class="lightbox-nav next" type="button" aria-label="Next photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5l7 7-7 7"/></svg></button>
+</div>

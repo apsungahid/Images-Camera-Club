@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="/css/site.css">
   <script src="/js/site.js" defer></script>
 </head>
-<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+<body class="<%= bodyClass %>">
   <%- include('partials/header') %>
   <main id="main">
     <% if (flash) { %>

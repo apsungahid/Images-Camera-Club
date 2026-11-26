@@ -1,11 +1,16 @@
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const { openDatabase } = require('../src/db');
 const { createApp } = require('../src/app');
 
 // Starts the app on a random port with an in-memory database.
-async function startTestApp() {
+async function startTestApp(overrides = {}) {
   const db = openDatabase(':memory:');
+  const uploadsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'icc-uploads-'));
   const config = {
     env: 'test', port: 0, siteUrl: 'http://localhost', sessionSecret: 'x'.repeat(48), dbPath: ':memory:', google: null,
+    uploadsDir, photoLimit: 50, watermark: true, ...overrides,
   };
   const app = createApp({ db, config });
   const server = await new Promise((resolve) => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
@@ -13,8 +18,9 @@ async function startTestApp() {
   return {
     db,
     base,
+    config,
     client: () => new Client(base),
-    close: () => new Promise((resolve) => { app.locals.sessionStore.close(); server.close(() => { db.close(); resolve(); }); }),
+    close: () => new Promise((resolve) => { app.locals.sessionStore.close(); server.close(() => { db.close(); fs.rmSync(uploadsDir, { recursive: true, force: true }); resolve(); }); }),
   };
 }
 
@@ -40,6 +46,21 @@ class Client {
   }
 
   get(path) { return this.request('GET', path); }
+
+  // Multipart form with one file, like a browser upload.
+  async upload(path, fields, file) {
+    const form = new FormData();
+    form.append('_csrf', this.csrf);
+    for (const [k, v] of Object.entries(fields)) [].concat(v).forEach((x) => form.append(k, String(x)));
+    if (file) form.append(file.field || 'photo', new Blob([file.buffer], { type: file.type || 'image/jpeg' }), file.name || 'photo.jpg');
+    const res = await fetch(this.base + path, { method: 'POST', headers: { cookie: this.cookie }, body: form, redirect: 'manual' });
+    const setCookie = res.headers.get('set-cookie');
+    if (setCookie) this.cookie = setCookie.split(';')[0];
+    const text = await res.text();
+    const m = text.match(/name="_csrf" value="([^"]+)"/);
+    if (m) this.csrf = m[1];
+    return { status: res.status, location: res.headers.get('location'), text };
+  }
 
   async post(path, form) {
     if (!this.csrf) await this.get('/login');

@@ -2,6 +2,8 @@ const express = require('express');
 const { z } = require('zod');
 const { requireAdmin } = require('../lib/security');
 const { createAccessCode } = require('../lib/codes');
+const { uniqueSlug } = require('../lib/categories');
+const { removeFiles } = require('../lib/images');
 
 const localDateTime = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, 'Please enter a valid date and time.');
 
@@ -22,13 +24,18 @@ const eventSchema = z.object({
   visibility: z.enum(['public', 'members']),
 }).refine((d) => !d.ends_at || d.ends_at >= d.starts_at, { message: 'The end must be after the start.' });
 
+const categorySchema = z.object({
+  name: z.string().trim().min(2, 'Category name: at least 2 characters.').max(60, 'Category name: at most 60 characters.'),
+  description: z.string().trim().max(300, 'Description: at most 300 characters.').optional().default(''),
+});
+
 const inviteSchema = z.object({
   for_name: z.string().trim().max(80).optional().default(''),
   role: z.enum(['member', 'admin']),
   days: z.coerce.number().int().min(1).max(60),
 });
 
-module.exports = function adminRoutes({ db }) {
+module.exports = function adminRoutes({ db, config }) {
   const router = express.Router();
   router.use(requireAdmin);
 
@@ -46,6 +53,7 @@ module.exports = function adminRoutes({ db }) {
         announcements: count('SELECT COUNT(*) FROM announcements'),
         events: count("SELECT COUNT(*) FROM events WHERE starts_at >= strftime('%Y-%m-%dT%H:%M', 'now', '+8 hours')"),
         photos: count('SELECT COUNT(*) FROM photos'),
+        categories: count('SELECT COUNT(*) FROM categories'),
       },
     });
   });
@@ -134,6 +142,79 @@ module.exports = function adminRoutes({ db }) {
     db.prepare('DELETE FROM announcements WHERE id = ?').run(id(req));
     req.flash('success', 'The announcement has been deleted.');
     back(res, '/announcements');
+  });
+
+  // ---- Gallery categories
+  router.get('/categories', (req, res) => {
+    const items = db.prepare(`
+      SELECT c.*,
+        (SELECT COUNT(*) FROM photo_categories pc WHERE pc.category_id = c.id) AS photo_count,
+        (SELECT COUNT(*) FROM photos p WHERE p.main_category_id = c.id) AS main_count
+      FROM categories c ORDER BY c.name COLLATE NOCASE`).all();
+    res.render('admin/categories', { title: 'Gallery categories', items, editId: Number(req.query.edit) || null });
+  });
+
+  router.post('/categories', (req, res) => {
+    const parsed = categorySchema.safeParse(req.body);
+    if (!parsed.success) return fail(req, res, '/categories', parsed);
+    const { name, description } = parsed.data;
+    if (db.prepare('SELECT 1 FROM categories WHERE name = ?').get(name)) {
+      req.flash('error', `There is already a category named “${name}”.`);
+      return back(res, '/categories');
+    }
+    db.prepare('INSERT INTO categories (name, slug, description) VALUES (?, ?, ?)').run(name, uniqueSlug(db, name), description || null);
+    req.flash('success', `Category “${name}” added. Its gallery appears once it has a photo.`);
+    return back(res, '/categories');
+  });
+
+  router.post('/categories/:id', (req, res) => {
+    const parsed = categorySchema.safeParse(req.body);
+    if (!parsed.success) return fail(req, res, `/categories?edit=${id(req)}`, parsed);
+    const { name, description } = parsed.data;
+    if (db.prepare('SELECT 1 FROM categories WHERE name = ? AND id != ?').get(name, id(req))) {
+      req.flash('error', `There is already a category named “${name}”.`);
+      return back(res, `/categories?edit=${id(req)}`);
+    }
+    db.prepare('UPDATE categories SET name = ?, slug = ?, description = ? WHERE id = ?')
+      .run(name, uniqueSlug(db, name, id(req)), description || null, id(req));
+    req.flash('success', 'The category has been saved.');
+    return back(res, '/categories');
+  });
+
+  router.post('/categories/:id/delete', (req, res) => {
+    const used = db.prepare('SELECT COUNT(*) FROM photos WHERE main_category_id = ?').pluck().get(id(req));
+    if (used) {
+      req.flash('error', `This category is the main category of ${used} photo${used === 1 ? '' : 's'}. Those photos need another main category before it can be deleted.`);
+      return back(res, '/categories');
+    }
+    db.prepare('DELETE FROM categories WHERE id = ?').run(id(req));
+    req.flash('success', 'The category has been deleted.');
+    return back(res, '/categories');
+  });
+
+  // ---- Photos (moderation)
+  router.get('/photos', (req, res) => {
+    const items = db.prepare(`
+      SELECT p.id, p.title, p.thumb_key, p.featured, p.bytes, p.created_at, u.display_name AS photographer, c.name AS main_category
+      FROM photos p JOIN users u ON u.id = p.owner_id JOIN categories c ON c.id = p.main_category_id
+      ORDER BY p.created_at DESC, p.id DESC LIMIT 500`).all();
+    const totals = db.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(bytes), 0) AS bytes FROM photos').get();
+    res.render('admin/photos', { title: 'Photos', items, totals });
+  });
+
+  router.post('/photos/:id/feature', (req, res) => {
+    db.prepare('UPDATE photos SET featured = 1 - featured WHERE id = ?').run(id(req));
+    back(res, '/photos');
+  });
+
+  router.post('/photos/:id/delete', (req, res) => {
+    const photo = db.prepare('SELECT display_key, thumb_key FROM photos WHERE id = ?').get(id(req));
+    if (photo) {
+      db.prepare('DELETE FROM photos WHERE id = ?').run(id(req));
+      removeFiles(config.uploadsDir, [photo.display_key, photo.thumb_key]);
+      req.flash('success', 'The photo has been removed from the gallery.');
+    }
+    back(res, '/photos');
   });
 
   // ---- Activities / events

@@ -1,0 +1,71 @@
+<div class="wrap admin">
+  <%- include('_nav') %>
+  <div class="admin-main stack">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Gallery categories</h1>
+      <p class="muted">Each category becomes a catalogue in the public gallery as soon as it has at least one photo. Catalogues are listed alphabetically.</p>
+    </div>
+
+    <details class="panel" <%= items.length ? '' : 'open' %>>
+      <summary>Add a category</summary>
+      <form class="form" method="post" action="/admin/categories">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" name="name" type="text" maxlength="60" required placeholder="e.g. Street, Landscape, Portrait">
+        </div>
+        <div class="field">
+          <label for="description">Short description</label>
+          <input id="description" name="description" type="text" maxlength="300" placeholder="Optional. Shown on the category's gallery page.">
+        </div>
+        <div><button class="btn" type="submit">Add category</button></div>
+      </form>
+    </details>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Category</th><th>Photos</th><th>In gallery</th><th></th></tr></thead>
+        <tbody>
+          <% if (!items.length) { %><tr><td colspan="4" class="muted">No categories yet. Members can upload photos once there is at least one.</td></tr><% } %>
+          <% items.forEach((c) => { %>
+            <% if (editId === c.id) { %>
+              <tr>
+                <td colspan="4">
+                  <form class="form" method="post" action="/admin/categories/<%= c.id %>">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <div class="row">
+                      <div class="field"><label for="name-<%= c.id %>">Name</label><input id="name-<%= c.id %>" name="name" type="text" maxlength="60" required value="<%= c.name %>"></div>
+                      <div class="field"><label for="desc-<%= c.id %>">Short description</label><input id="desc-<%= c.id %>" name="description" type="text" maxlength="300" value="<%= c.description || '' %>"></div>
+                    </div>
+                    <div class="inline-form">
+                      <button class="btn btn-sm" type="submit">Save</button>
+                      <a class="btn btn-ghost btn-sm" href="/admin/categories">Cancel</a>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+            <% } else { %>
+              <tr>
+                <td><strong><%= c.name %></strong><% if (c.description) { %><br><span class="muted small"><%= c.description %></span><% } %></td>
+                <td class="small"><%= c.photo_count %><% if (c.main_count) { %> <span class="muted">(<%= c.main_count %> as main)</span><% } %></td>
+                <td>
+                  <% if (c.photo_count) { %><a class="state state-open plain" href="/gallery/<%= c.slug %>">Shown</a><% } else { %><span class="state">Hidden: no photos</span><% } %>
+                </td>
+                <td>
+                  <div class="inline-form">
+                    <a class="btn btn-ghost btn-sm" href="/admin/categories?edit=<%= c.id %>">Edit</a>
+                    <form method="post" action="/admin/categories/<%= c.id %>/delete" data-confirm="Delete the category “<%= c.name %>”? Photos keep their other categories.">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <button class="btn btn-danger btn-sm" type="submit" <%= c.main_count ? 'disabled title="Main category of some photos"' : '' %>>Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% } %>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

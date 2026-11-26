@@ -1,15 +1,47 @@
 const crypto = require('node:crypto');
 
+function csrfValid(req) {
+  const sent = Buffer.from(String(req.body?._csrf || req.get('x-csrf-token') || ''));
+  const expected = Buffer.from(req.session.csrf || '');
+  return expected.length > 0 && sent.length === expected.length && crypto.timingSafeEqual(sent, expected);
+}
+
+function csrfRefused(res) {
+  res.status(403);
+  return res.render('pages/error', { title: 'Session expired', message: 'Your form expired. Please go back, refresh the page and try again.' });
+}
+
 // CSRF: one random token per session, required on every non-GET request.
+// File-upload forms (multipart) are read later by the upload handler, so their check runs there
+// (see acceptUpload). Multipart is accepted only on the paths listed here, which must use it.
+const UPLOAD_PATHS = new Set(['/account/photos']);
+
 function csrf(req, res, next) {
   if (!req.session.csrf) req.session.csrf = crypto.randomBytes(24).toString('hex');
   res.locals.csrfToken = req.session.csrf;
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
-  const sent = Buffer.from(String(req.body?._csrf || req.get('x-csrf-token') || ''));
-  const expected = Buffer.from(req.session.csrf);
-  if (sent.length === expected.length && crypto.timingSafeEqual(sent, expected)) return next();
-  res.status(403);
-  return res.render('pages/error', { title: 'Session expired', message: 'Your form expired. Please go back, refresh the page and try again.' });
+  if (req.is('multipart/form-data')) {
+    return UPLOAD_PATHS.has(req.path) ? next() : csrfRefused(res);
+  }
+  return csrfValid(req) ? next() : csrfRefused(res);
+}
+
+/**
+ * Reads a single-file upload form, then checks its CSRF token.
+ * onError(req, res, message) handles a file that is too large or a bad form.
+ */
+function acceptUpload(upload, field, onError) {
+  const single = upload.single(field);
+  return (req, res, next) => single(req, res, (err) => {
+    if (err) {
+      const message = err.code === 'LIMIT_FILE_SIZE'
+        ? 'That file is too large. Please upload a photo under 25 MB.'
+        : 'The upload did not complete. Please try again.';
+      return onError(req, res, message);
+    }
+    if (!csrfValid(req)) return csrfRefused(res);
+    return next();
+  });
 }
 
 function requireMember(req, res, next) {
@@ -49,4 +81,4 @@ function rateLimit({ windowMs, max }) {
   };
 }
 
-module.exports = { csrf, requireMember, requireAdmin, rateLimit };
+module.exports = { csrf, acceptUpload, requireMember, requireAdmin, rateLimit };

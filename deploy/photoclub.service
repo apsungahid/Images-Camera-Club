@@ -16,7 +16,7 @@ Environment=PORT=3001
 Environment=TZ=Asia/Manila
 NoNewPrivileges=true
 ProtectSystem=strict
-ReadWritePaths=/srv/photoclub/data /srv/photoclub-backups
+ReadWritePaths=/srv/photoclub/data /srv/photoclub/uploads /srv/photoclub-backups
 ProtectHome=true
 PrivateTmp=true
 # Leave room for the HRIS on the shared 1 GB server.
