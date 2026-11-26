@@ -5,6 +5,7 @@ const { requireMember, acceptUpload } = require('../lib/security');
 const { allCategories } = require('../lib/categories');
 const { processUpload, removeFiles, ImageError } = require('../lib/images');
 const site = require('../site');
+const { parseAperture, parseShutter, parseIso, exposureLine } = require('../lib/exposure');
 
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
@@ -44,7 +45,7 @@ module.exports = function photoRoutes({ db, config }) {
         (SELECT GROUP_CONCAT(pc.category_id) FROM photo_categories pc WHERE pc.photo_id = p.id) AS category_ids
       FROM photos p JOIN categories c ON c.id = p.main_category_id
       WHERE p.owner_id = ? ORDER BY p.created_at DESC, p.id DESC`).all(req.user.id)
-      .map((p) => ({ ...p, categoryIds: String(p.category_ids || '').split(',').map(Number) }));
+      .map((p) => ({ ...p, categoryIds: String(p.category_ids || '').split(',').map(Number), exposure: exposureLine({ ...p, show_exif: 1 }) }));
     res.status(status).render('pages/my-photos', {
       title: 'Your photos',
       photos,
@@ -100,10 +101,12 @@ module.exports = function photoRoutes({ db, config }) {
           db.transaction(() => {
             // Checked again here in case two uploads finished at the same time.
             if (countFor(req.user.id) >= config.photoLimit) throw new ImageError(`You have reached the limit of ${config.photoLimit} photos.`);
-            const r = db.prepare(`INSERT INTO photos (owner_id, title, caption, main_category_id, display_key, thumb_key, width, height, bytes, public_ack_at)
-                                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`)
+            const r = db.prepare(`INSERT INTO photos (owner_id, title, caption, main_category_id, display_key, thumb_key, width, height, bytes,
+                                    aperture, exposure_time, iso, show_exif, public_ack_at)
+                                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`)
               .run(req.user.id, parsed.data.title, parsed.data.caption || null, parsed.data.main_category_id,
-                image.displayKey, image.thumbKey, image.width, image.height, image.bytes);
+                image.displayKey, image.thumbKey, image.width, image.height, image.bytes,
+                image.aperture, image.exposureTime, image.iso, req.body.show_exif === '1' ? 1 : 0);
             setCategories(r.lastInsertRowid, categoryIds);
           })();
         } catch (e) {
@@ -112,7 +115,11 @@ module.exports = function photoRoutes({ db, config }) {
           throw e;
         }
 
-        req.flash('success', `“${parsed.data.title}” is now in the gallery. Remember: it is publicly viewable by anyone visiting the site.`);
+        const found = image.aperture || image.exposureTime || image.iso;
+        const cameraNote = req.body.show_exif === '1' && !found
+          ? ' No camera details were found in the file; you can add them with Edit.'
+          : '';
+        req.flash('success', `“${parsed.data.title}” is now in the gallery. Remember: it is publicly viewable by anyone visiting the site.${cameraNote}`);
         return res.redirect('/account/photos');
       } catch (e) { return next(e); }
     });
@@ -122,13 +129,20 @@ module.exports = function photoRoutes({ db, config }) {
     if (!photo) return res.redirect('/account/photos');
     const parsed = detailsSchema.safeParse(req.body);
     const ids = parsed.success && resolveCategories(parsed.data.main_category_id, toIds(req.body.categories));
-    if (!parsed.success || !ids) {
-      req.flash('error', parsed.success ? 'Please choose a main category.' : parsed.error.issues[0].message);
+    const aperture = parseAperture(req.body.aperture);
+    const shutter = parseShutter(req.body.exposure_time);
+    const iso = parseIso(req.body.iso);
+    const error = (!parsed.success && parsed.error.issues[0].message) || (!ids && 'Please choose a main category.')
+      || aperture.error || shutter.error || iso.error;
+    if (error) {
+      req.flash('error', error);
       return res.redirect(`/account/photos?edit=${photo.id}`);
     }
     db.transaction(() => {
-      db.prepare('UPDATE photos SET title = ?, caption = ?, main_category_id = ? WHERE id = ?')
-        .run(parsed.data.title, parsed.data.caption || null, parsed.data.main_category_id, photo.id);
+      db.prepare(`UPDATE photos SET title = ?, caption = ?, main_category_id = ?, aperture = ?, exposure_time = ?, iso = ?, show_exif = ?
+                  WHERE id = ?`)
+        .run(parsed.data.title, parsed.data.caption || null, parsed.data.main_category_id,
+          aperture.value, shutter.value, iso.value, req.body.show_exif === '1' ? 1 : 0, photo.id);
       setCategories(photo.id, ids);
     })();
     req.flash('success', 'The photo has been updated.');

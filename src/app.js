@@ -8,6 +8,7 @@ const passport = require('passport');
 const { SqliteStore } = require('./lib/session-store');
 const { csrf } = require('./lib/security');
 const format = require('./lib/format');
+const camera = require('./lib/exposure');
 const site = require('./site');
 const { setupPassport } = require('./auth');
 
@@ -68,6 +69,7 @@ function createApp({ db, config }) {
     res.locals.path = req.path;
     res.locals.site = site;
     res.locals.fmt = format;
+    res.locals.camera = camera;
     res.locals.googleEnabled = Boolean(config.google);
     res.locals.flash = req.session.flash || null;
     res.locals.title = null;

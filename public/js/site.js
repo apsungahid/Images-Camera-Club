@@ -68,6 +68,7 @@ document.querySelectorAll('[data-slider]').forEach((track) => {
   const title = box.querySelector('.title');
   const by = box.querySelector('.by');
   const caption = box.querySelector('.caption');
+  const exposure = box.querySelector('.exposure');
   let index = 0;
   let lastFocus = null;
 
@@ -79,6 +80,8 @@ document.querySelectorAll('[data-slider]').forEach((track) => {
     title.textContent = t.dataset.title;
     by.textContent = t.dataset.by;
     caption.textContent = t.dataset.caption || '';
+    exposure.textContent = t.dataset.exposure || '';
+    exposure.hidden = !t.dataset.exposure;
     // Load the neighbours so moving through the set feels instant.
     [index + 1, index - 1].forEach((n) => { new Image().src = tiles[(n + tiles.length) % tiles.length].getAttribute('href'); });
   };

@@ -87,9 +87,12 @@ const PHOTOS = [
     const image = await processUpload(await placeholder(w / 2, h / 2, PALETTES[palette], grey).then((b) => sharp(b).resize(w, h).toBuffer()), {
       uploadsDir, credit: `© ${owner.display_name} · Images Camera Club`, watermark: process.env.WATERMARK !== 'off',
     });
-    const r = db.prepare(`INSERT INTO photos (owner_id, title, main_category_id, display_key, thumb_key, width, height, bytes, public_ack_at, featured)
-                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)`)
-      .run(owner.id, title, catId(main), image.displayKey, image.thumbKey, image.width, image.height, image.bytes, Math.random() < 0.5 ? 1 : 0);
+    const [aperture, shutter, iso] = [[2.8, 1 / 250, 200], [8, 1 / 125, 100], [1.8, 1 / 60, 3200], [11, 2, 64]][Math.floor(Math.random() * 4)];
+    const r = db.prepare(`INSERT INTO photos (owner_id, title, main_category_id, display_key, thumb_key, width, height, bytes, public_ack_at, featured,
+                            aperture, exposure_time, iso, show_exif)
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?, ?)`)
+      .run(owner.id, title, catId(main), image.displayKey, image.thumbKey, image.width, image.height, image.bytes, Math.random() < 0.5 ? 1 : 0,
+        aperture, shutter, iso, Math.random() < 0.7 ? 1 : 0);
     for (const c of new Set([main, ...extra])) db.prepare('INSERT INTO photo_categories (photo_id, category_id) VALUES (?, ?)').run(r.lastInsertRowid, catId(c));
     process.stdout.write('.');
   }

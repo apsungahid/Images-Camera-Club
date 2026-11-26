@@ -60,6 +60,8 @@
             <label for="caption">Caption</label>
             <textarea id="caption" name="caption" rows="3" maxlength="1000" placeholder="Optional: the story, place or settings."><%= values.caption || '' %></textarea>
           </div>
+          <label class="check"><input type="checkbox" name="show_exif" value="1" <%= values.show_exif === '1' ? 'checked' : '' %>> Show camera details</label>
+          <span class="hint check-hint">Aperture, shutter speed and ISO are read from the photo file and shown with it in the gallery. You can correct them later with Edit.</span>
           <label class="check ack"><input type="checkbox" name="public_ack" value="1" required> I understand this photo will be publicly viewable by anyone visiting the website, and I confirm it is my own work.</label>
           <div><button class="btn" type="submit">Upload photo</button></div>
         </form>
@@ -89,12 +91,22 @@
                     <% }) %>
                   </div>
                 </fieldset>
+                <fieldset class="field checks">
+                  <legend class="label">Camera details</legend>
+                  <div class="row-3">
+                    <div class="field"><label for="ap-<%= p.id %>" class="sub">Aperture</label><input id="ap-<%= p.id %>" name="aperture" type="text" inputmode="decimal" placeholder="f/2.8" value="<%= camera.formatAperture(p.aperture) || '' %>"></div>
+                    <div class="field"><label for="sh-<%= p.id %>" class="sub">Shutter</label><input id="sh-<%= p.id %>" name="exposure_time" type="text" placeholder="1/250" value="<%= (camera.formatShutter(p.exposure_time) || '').replace(/s$/, '') %>"></div>
+                    <div class="field"><label for="iso-<%= p.id %>" class="sub">ISO</label><input id="iso-<%= p.id %>" name="iso" type="text" inputmode="numeric" placeholder="400" value="<%= p.iso || '' %>"></div>
+                  </div>
+                  <label class="check"><input type="checkbox" name="show_exif" value="1" <%= p.show_exif ? 'checked' : '' %>> Show camera details in the gallery</label>
+                </fieldset>
                 <div class="field"><label for="c-<%= p.id %>">Caption</label><textarea id="c-<%= p.id %>" name="caption" rows="3" maxlength="1000"><%= p.caption || '' %></textarea></div>
                 <div class="inline-form"><button class="btn btn-sm" type="submit">Save</button><a class="btn btn-ghost btn-sm" href="/account/photos">Cancel</a></div>
               </form>
             <% } else { %>
               <div class="my-photo-body">
                 <strong><%= p.title %></strong>
+                <span class="small camera-line"><% if (p.exposure) { %><%= p.exposure %> <span class="muted">· <%= p.show_exif ? 'shown' : 'hidden' %></span><% } else { %><span class="muted">No camera details</span><% } %></span>
                 <span class="muted small"><%= categories.filter((c) => p.categoryIds.includes(c.id)).map((c) => c.id === p.main_category_id ? `${c.name} (main)` : c.name).join(' · ') %></span>
                 <div class="inline-form">
                   <a class="btn btn-ghost btn-sm" href="/account/photos?edit=<%= p.id %>">Edit</a>

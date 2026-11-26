@@ -2,6 +2,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const sharp = require('sharp');
+const { readExposure } = require('./exposure');
 
 // The server is small (shared, 1 GB): one image at a time, no libvips cache.
 sharp.concurrency(1);
@@ -41,7 +42,8 @@ function enqueue(job) {
 /**
  * Turns an uploaded file into the two copies the site serves, and keeps nothing else:
  * - the original never touches the disk;
- * - all metadata (camera serial, GPS location) is removed;
+ * - all metadata (camera serial, GPS location) is removed from the files; only aperture,
+ *   shutter speed and ISO are read out first and returned;
  * - the large copy is limited to 1600px and carries a small credit line.
  */
 function processUpload(buffer, { uploadsDir, credit, watermark = true }) {
@@ -85,6 +87,7 @@ function processUpload(buffer, { uploadsDir, credit, watermark = true }) {
       .toFile(path.join(uploadsDir, thumbKey));
 
     return {
+      ...readExposure(meta.exif),
       displayKey,
       thumbKey,
       width: displayInfo.width,

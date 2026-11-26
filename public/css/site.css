@@ -492,3 +492,14 @@ input[type="file"] { font: inherit; padding: 12px; background: var(--surface); b
 .account-photos-link strong { font: 500 1.6rem/1.1 var(--serif); }
 .account-photos-link > span:last-child { font-size: 1.5rem; color: var(--accent); }
 .btn[disabled] { opacity: .4; cursor: not-allowed; }
+
+/* Camera details */
+.photo-tile-meta .exposure, .lightbox-figure .exposure { font: 500 .72rem/1.4 var(--sans); letter-spacing: .12em; color: rgba(242, 239, 232, .7); font-variant-numeric: tabular-nums; }
+.photo-tile-meta .exposure { margin-top: 2px; }
+.lightbox-figure .exposure { display: inline-block; justify-self: center; margin-top: 6px; padding: 6px 12px; border: 1px solid rgba(255, 255, 255, .18); }
+.lightbox-figure .exposure[hidden] { display: none; }
+.row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 10px; }
+.field label.sub { font-size: .68rem; color: var(--muted); }
+.check-hint { margin-top: -10px; padding-left: 26px; }
+.camera-line { font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+@media (max-width: 560px) { .row-3 { grid-template-columns: 1fr 1fr 1fr; gap: 8px; } }

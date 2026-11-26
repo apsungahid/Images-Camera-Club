@@ -40,7 +40,8 @@ function catalogues(db, vis) {
 
 function photosInCategory(db, categoryId, vis) {
   return db.prepare(`
-    SELECT p.id, p.title, p.caption, p.display_key, p.thumb_key, p.width, p.height, u.display_name AS photographer
+    SELECT p.id, p.title, p.caption, p.display_key, p.thumb_key, p.width, p.height,
+      p.show_exif, p.aperture, p.exposure_time, p.iso, u.display_name AS photographer
     FROM photo_categories pc
     JOIN photos p ON p.id = pc.photo_id
     JOIN users u ON u.id = p.owner_id
