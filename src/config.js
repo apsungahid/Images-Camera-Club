@@ -13,6 +13,8 @@ function loadConfig(env = process.env) {
     watermark: env.WATERMARK !== 'off',
     // Private files from member forms (contest entries). Never served publicly.
     formsDir: env.FORMS_DIR || 'data/forms',
+    // Demo/staging copies (e.g. icc.dualcrest.com) ask search engines not to list them.
+    noindex: env.NOINDEX === 'true',
     google: env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
       ? { clientID: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET }
       : null,

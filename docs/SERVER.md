@@ -8,6 +8,25 @@ The club website will run on the **same DigitalOcean Droplet** as the Dual Crest
 restart without ever touching each other. This guide lists what is already taken on the server
 and what the club website uses instead.
 
+## Quick path: demo at https://icc.dualcrest.com
+
+`dualcrest.com` is already in the Cloudflare account that runs the HRIS tunnel, so the demo needs
+no new domain. Sections 2 and 3 below are done by one script plus one Cloudflare entry:
+
+1. On the Droplet, as root: `sudo bash setup-photoclub.sh https://icc.dualcrest.com`
+   (the script is `deploy/setup-photoclub.sh` in the repository; it pauses once for the GitHub
+   deploy key). It touches only `photoclub` things and checks the HRIS is still running.
+2. Cloudflare › Zero Trust › Networks › Tunnels › `hris` › Public hostname › Add:
+   `icc.dualcrest.com`, service HTTP, URL `localhost:3001`. Leave `hris.dualcrest.com` as it is.
+3. First admin: `sudo -u photoclub bash -c 'cd /srv/photoclub && npm run create-admin -- "Your Name"'`,
+   then open the printed `/join?code=…` link.
+
+The demo has `NOINDEX=true`, so search engines are asked not to list it. When the real domain is
+ready, add it as another public hostname and change `SITE_URL` (and `NOINDEX=false`) in
+`/srv/photoclub/.env`, then `sudo systemctl restart photoclub`.
+
+---
+
 Placeholders used below. Replace them once they are decided:
 
 | Placeholder | Meaning |

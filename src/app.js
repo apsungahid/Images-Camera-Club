@@ -41,6 +41,10 @@ function createApp({ db, config }) {
     },
   }));
 
+  if (config.noindex) {
+    app.use((req, res, next) => { res.set('X-Robots-Tag', 'noindex, nofollow'); next(); });
+    app.get('/robots.txt', (req, res) => res.type('text').send('User-agent: *\nDisallow: /\n'));
+  }
   app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: production ? '7d' : 0 }));
   // Resized member photos. File names are random and never reused, so they can be cached for good.
   app.use('/media', express.static(path.resolve(config.uploadsDir), {

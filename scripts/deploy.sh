@@ -3,13 +3,8 @@
 set -euo pipefail
 cd /srv/photoclub
 
-# Back up the club database first (keeps 14 days).
-if [ -f data/club.db ]; then
-  ts=$(date +%Y%m%d-%H%M%S)
-  sqlite3 data/club.db ".backup '/srv/photoclub-backups/club-${ts}.db'" 2>/dev/null \
-    || cp data/club.db "/srv/photoclub-backups/club-${ts}.db"
-  find /srv/photoclub-backups -name 'club-*.db' -mtime +14 -delete
-fi
+# Back up the database, photos and contest entries first (keeps 14 days).
+node scripts/backup.js /srv/photoclub-backups 14 || echo "==> Backup failed; continuing with the update"
 
 git fetch --quiet origin main
 git reset --quiet --hard origin/main
